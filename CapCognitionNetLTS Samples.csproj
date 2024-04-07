@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CapCognition.BarcodeScanning.NET" Version="1.1.1" />
-    <PackageReference Include="CapCognition.LicensePlateDetection.NET" Version="1.1.0" />
-    <PackageReference Include="CapCognition.NET" Version="1.1.0" />
+    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="1.1.2" />
+    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="1.1.1" />
+    <PackageReference Include="CapCognition.Net" Version="1.1.1" />
   </ItemGroup>
 
   <ItemGroup>

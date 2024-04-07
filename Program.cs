@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
-using CapCognition.BarcodeScanning.Net.Common;
-using CapCognition.Core.Net.Capture;
-using CapCognition.LicensePlateDetection.Net.Common;
+using CapCognition.Net.BarcodeScanning.Common;
 using CapCognition.Net.CaptureSources.VideoStream;
+using CapCognition.Net.Core.Capture;
+using CapCognition.Net.LicensePlateDetection.Common;
 
 namespace CapCognitionNetLTS_Samples;
 
@@ -10,7 +10,7 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        CapCognition.Core.Net.CapCognition.Initialize(new[]
+        CapCognition.Net.Core.CapCognition.Initialize(new[]
         {
             //Add your licenses here
             "",
@@ -22,7 +22,7 @@ public class Program
         ]);
 
         //Enable logs
-        CapCognition.Core.Net.CapCognition.EnableImageProcessingLogs = false;
+        CapCognition.Net.Core.CapCognition.EnableImageProcessingLogs = false;
 
         CaptureControl.Instance.InitializeAsync().GetAwaiter().GetResult();
         //Get path to the local image, not in bin folder but in the project folder

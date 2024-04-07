@@ -1,9 +1,9 @@
-﻿using CapCognition.BarcodeScanning.Net.Common;
-using CapCognition.Core.Net.Processing.Common;
-using CapCognition.LicensePlateDetection.Net.Common;
-using CapCognition.Net;
+﻿using CapCognition.Net;
+using CapCognition.Net.BarcodeScanning.Common;
+using CapCognition.Net.Core.Processing.Common;
+using CapCognition.Net.LicensePlateDetection.Common;
 using SkiaSharp;
-using static CapCognition.Core.Net.Processing.Common.RecognitionProcessorResult;
+using static CapCognition.Net.Core.Processing.Common.RecognitionProcessorResult;
 
 namespace CapCognitionNetLTS_Samples;
 
