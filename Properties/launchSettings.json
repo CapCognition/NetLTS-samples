@@ -2,7 +2,7 @@
   "profiles": {
     "CCNetLTS Samples": {
       "commandName": "Project",
-      "commandLineArgs": "recognize"
+      "commandLineArgs": "ownRecognizer"
     }
   }
 }
