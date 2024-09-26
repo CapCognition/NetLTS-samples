@@ -103,9 +103,7 @@ public class RecognizerDemo
 
     private readonly BarcodeRecognitionOption _barcodeRecognitionOption = new()
     {
-        DisplayBarcodeText = true,
         EnableMultiCodeReader = true,
-        EnableBarcodeOverlays = true,
         UseFastRecognition = false,
         BinarizerToUse = BarcodeRecognitionOption.BinarizerType.HistogrammBinarizer,
         BarcodeFormatsToRecognize =
@@ -116,8 +114,6 @@ public class RecognizerDemo
 
     private readonly LicensePlateDetectionRecognitionOption _licensePlateDetectionRecognitionOption = new()
     {
-        DisplayLicensePlateAsText = true,
-        UseHighResolutionImageForRecognition = true,
         UseCroppedImageForRecognition = false,
         UseCudaProvider = false,
     };

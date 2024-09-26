@@ -1,11 +1,7 @@
-﻿using System.IO;
-using System.Reflection;
-using CapCognition.Licensing;
+﻿using System.Reflection;
 using CapCognition.Net.BarcodeScanning.Common;
 using CapCognition.Net.CaptureSources.VideoStream;
-using CapCognition.Net.Core;
 using CapCognition.Net.Core.Capture;
-using CapCognition.Net.Core.Processing;
 using CapCognition.Net.LicensePlateDetection.Common;
 using CapCognitionNetLTS_Samples.OwnProcessor;
 

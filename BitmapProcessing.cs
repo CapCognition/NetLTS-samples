@@ -132,9 +132,7 @@ public class BitmapProcessing
 
     private static readonly BarcodeRecognitionOption BarcodeRecognitionOption = new()
     {
-        DisplayBarcodeText = true,
         EnableMultiCodeReader = true,
-        EnableBarcodeOverlays = true,
         UseFastRecognition = false,
         BinarizerToUse = BarcodeRecognitionOption.BinarizerType.HistogrammBinarizer,
         BarcodeFormatsToRecognize =
@@ -145,8 +143,6 @@ public class BitmapProcessing
 
     private static readonly LicensePlateDetectionRecognitionOption LicensePlateDetectionRecognitionOption = new()
     {
-        DisplayLicensePlateAsText = true,
-        UseHighResolutionImageForRecognition = true,
         UseCroppedImageForRecognition = false,
         UseCudaProvider = false,
     };
