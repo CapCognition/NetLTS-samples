@@ -80,9 +80,16 @@ public class BitmapProcessing
     /// <param name="useBarcodeDetection"></param>
     /// <param name="useLicensePlateDetection"></param>
     /// <returns></returns>
-    public static bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection = true, bool useLicensePlateDetection = true, bool useOwnProcessor = false)
+    public static bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection = true, bool useLicensePlateDetection = true, bool useOwnProcessor = false, bool downloadModelsFromInternet = true)
     {
         recognizer = new Recognizer();
+
+        var lpModelFileName = "Models/" + LicensePlateDetectionConstants.LicensePlateModelFileName640N + ".ccml";
+        var textModelFileName = "Models/" + LicensePlateDetectionConstants.TextModelFileName640N + ".ccml";
+        var vehicleModelFileName = "Models/" + LicensePlateDetectionConstants.VehicleModelFileName640N + ".ccml";
+        using var lpFile = new FileStream(lpModelFileName, FileMode.Open);
+        using var textFile = new FileStream(textModelFileName, FileMode.Open);
+        using var vehicleFile = new FileStream(vehicleModelFileName, FileMode.Open);
 
         var options = new List<RecognitionOption>();
         if (useBarcodeDetection)
@@ -91,7 +98,20 @@ public class BitmapProcessing
         }
         if (useLicensePlateDetection)
         {
-            options.Add(LicensePlateDetectionRecognitionOption);
+            var lprOptions = LicensePlateDetectionRecognitionOption;
+            if (downloadModelsFromInternet)
+            {
+                lprOptions.SetRecognitionQuality(LicensePlateDetectionRecognitionOption.RecognitionQuality.Medium);
+            }
+            else
+            {
+                var plateModelStream = new LicensePlateDetectionRecognitionOption.StreamInfo(lpFile, lpModelFileName);
+                var textModelStream = new LicensePlateDetectionRecognitionOption.StreamInfo(textFile, textModelFileName);
+                var vehicleModelStream = new LicensePlateDetectionRecognitionOption.StreamInfo(vehicleFile, vehicleModelFileName);
+
+                lprOptions.SetModelStreams(plateModelStream, textModelStream, vehicleModelStream);
+            }
+            options.Add(lprOptions);
         }
         if (useOwnProcessor)
         {
@@ -121,11 +141,8 @@ public class BitmapProcessing
             }
             else if (res is RecognitionProcessorLicensePlateDetectionResult licensePlateResult)
             {
-                if (licensePlateResult.PlateNumber == null)
-                {
-                    continue;
-                }
-                resultList.Add(licensePlateResult.PlateNumber);
+                var plateNumber = $"Type:{licensePlateResult.VehicleType} Country:{licensePlateResult.PlateCountryCode} Plate:{licensePlateResult.PlateNumberValidated ?? licensePlateResult.PlateNumberRaw}";
+                resultList.Add(plateNumber);
             }
         }
     }
@@ -134,7 +151,7 @@ public class BitmapProcessing
     {
         EnableMultiCodeReader = true,
         UseFastRecognition = false,
-        BinarizerToUse = BarcodeRecognitionOption.BinarizerType.HistogrammBinarizer,
+        BinarizerToUse = BarcodeRecognitionOption.BinarizerType.HybridBinarizer,
         BarcodeFormatsToRecognize =
         [
             BarcodeRecognitionOption.BarcodeFormat.QRCode
@@ -143,7 +160,8 @@ public class BitmapProcessing
 
     private static readonly LicensePlateDetectionRecognitionOption LicensePlateDetectionRecognitionOption = new()
     {
-        UseCroppedImageForRecognition = false,
+        UseCroppedImageForRecognition = true,
+        DoAutomaticDetectionOptimization = true,
         UseCudaProvider = false,
     };
 

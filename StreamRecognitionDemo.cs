@@ -1,6 +1,5 @@
 ﻿using CapCognition.Net.Core.Capture;
 using CapCognition.Net.CaptureSources.VideoStream;
-using System;
 using SkiaSharp;
 using System.Reflection;
 
@@ -42,10 +41,9 @@ public class StreamRecognitionDemo
                     var bitmap = await captureSource.GetBitmapAsync(token);
                     if (bitmap != null)
                     {
-                        ProcessBitmap(bitmap);
+                        ProcessBitmap(bitmap, false);
                         continue;
                     }
-
                 }
             }
             catch (Exception)
@@ -66,9 +64,18 @@ public class StreamRecognitionDemo
         CaptureControl.Instance.RemoveCaptureSource(captureSource);
     }
 
-    private void ProcessBitmap(SKBitmap bitmap)
+    private void ProcessBitmap(SKBitmap bitmap, bool downloadModelsFromInternet)
     {
-        var success = BitmapProcessing.PrepareProcessor(out var recognizer, bitmap, true, true);
+        //Note: For demonstration reasons, the recognizer will be instantiated for every picture.
+        //In a real-world scenario, the recognizer should be reused for performance reasons and just being reinitialized when the picture resolution changes
+
+        var success = BitmapProcessing.PrepareProcessor(
+            recognizer: out var recognizer, 
+            bitmap: bitmap,
+            useBarcodeDetection: true,
+            useLicensePlateDetection: true,
+            useOwnProcessor: false,
+            downloadModelsFromInternet: downloadModelsFromInternet);
         if (!success)
         {
             Console.WriteLine("Failed to prepare recognition processor for bitmap");

@@ -4,6 +4,7 @@ using CapCognition.Net.CaptureSources.VideoStream;
 using CapCognition.Net.Core.Capture;
 using CapCognition.Net.LicensePlateDetection.Common;
 using CapCognitionNetLTS_Samples.OwnProcessor;
+using Microsoft.Extensions.Logging;
 
 namespace CapCognitionNetLTS_Samples;
 
@@ -11,7 +12,16 @@ public class Program
 {
     public static void Main(string[] args)
     {
-        CapCognition.Net.Core.CapCognition.Initialize(new[]
+        var loggingFactory = LoggerFactory.Create((builder) =>
+        {
+            builder.SetMinimumLevel(LogLevel.Debug);
+            builder.AddConsole();
+            builder.AddDebug();
+        });
+
+        CapCognition.Net.Core.CapCognition.Initialize(
+            loggingFactory,
+            new[]
             {
                 //Add your licenses here
                 "",
@@ -42,7 +52,12 @@ public class Program
                     continue;
                 }
                 //Recognize the image with barcode and license plate detection
-                new FileRecognitionDemo().Recognize(file, true, true, true);
+                new FileRecognitionDemo().Recognize(
+                    recognizePath: file,
+                    useBarcodeDetection: true,
+                    useLicensePlateDetection: true,
+                    useParallelProcessing: true,
+                    downloadModelsFromInternet: false);
             }
             return;
         }

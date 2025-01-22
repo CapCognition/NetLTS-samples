@@ -9,9 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="1.2.1" />
-    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="1.2.1" />
-    <PackageReference Include="CapCognition.Net" Version="1.2.1" />
+    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.0.0" />
+    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.0.0" />
+    <PackageReference Include="CapCognition.Net" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -19,6 +22,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\LPR.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\LPR_1.1_640_n.ccml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\LPR_and_qr.jpg">
@@ -40,6 +46,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\QR Code.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\Text_1.0_640_n.ccml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Models\Vehicle_1.0_640_n.ccml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
