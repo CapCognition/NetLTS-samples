@@ -9,12 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.0.0" />
-    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.0.0" />
-    <PackageReference Include="CapCognition.Net" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.1" />
+    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.0.1" />
+    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.0.1" />
+    <PackageReference Include="CapCognition.Net" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.2" />
   </ItemGroup>
 
   <ItemGroup>

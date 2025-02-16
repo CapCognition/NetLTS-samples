@@ -4,6 +4,9 @@ using CapCognition.Net.Core.Processing.Common;
 using CapCognition.Net.LicensePlateDetection.Common;
 using CapCognitionNetLTS_Samples.OwnProcessor;
 using SkiaSharp;
+using static CapCognition.Net.BarcodeScanning.Common.RecognitionProcessorBarcodeResult;
+using static CapCognition.Net.Core.Processing.Common.RecognitionProcessorResult;
+using static CapCognition.Net.LicensePlateDetection.Common.RecognitionProcessorLicensePlateDetectionResult;
 
 namespace CapCognitionNetLTS_Samples;
 
@@ -165,14 +168,27 @@ public class BitmapProcessing
         UseCudaProvider = false,
     };
 
-    private static readonly RecognitionProcessorResult.ResultDrawingOptions ResultDrawingOptions = new()
-    {
-        EnableResultDrawing = true,
-        DrawBoundingBox = true,
-        BoundingBoxColor = SKColors.Red,
-        BoundingBoxStyle = SKPaintStyle.Stroke,
-        BoundingBoxStrokeWidth = 2,
-    };
+    private static readonly ResultDrawingOptions[] ResultDrawingOptions =
+    [
+        new ResultDrawingOptionsBarcode()
+        {
+            DrawBoundingBox = true,
+            BoundingBoxColor = new SKColor(0, 0, 255),
+            BoundingBoxStyle = SKPaintStyle.Stroke,
+            BoundingBoxStrokeWidth = 3f,
+        },
+        new ResultDrawingOptionsLicensePlateDetection()
+        {
+            DisplayVehicleSurroundingBox = true,
+            VehicleSurroundingRectColor = new SKColor(0, 255, 0, 40),
+            VehicleSurroundingRectStyle = SKPaintStyle.Fill,
+            VehicleSurroundingRectStrokeWidth = 1,
+            LicensePlateSurroundingRectColor = SKColors.Green,
+            LicensePlateSurroundingRectStyle = SKPaintStyle.Stroke,
+            LicensePlateSurroundingRectStrokeWidth = 2,
+            LicensePlateNonValidatedSurroundingRectColor = SKColors.Red,
+        }
+    ];
 
     private static readonly OwnProcessorOption OwnProcessorOption = new()
     {
