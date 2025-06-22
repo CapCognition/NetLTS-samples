@@ -18,6 +18,15 @@ An example:
 
 In the StreamRecognitionDemo file, an image processor with the entire processor chain is newly created and initialized for each captured image before the image is passed for processing. This image processor only needs to be initialized once for a specific resolution and can then be reused for any further processing.
 
+## streamHLS {URL}
+An RTSP stream is initiated from the specified URL and converted to an HLS stream.
+
+The URL should follow the format: *“rtsp://{username}:{password}@{FQDN or IP address}:{port}”*
+
+The resulting HLS stream is generated in the "public/stream" subdirectory of the project directory. It can be viewed directly in a browser or using the provided HTML file. Playback with VLC or other media players is also possible; however, VLC may block the stream due to security restrictions if a self-signed certificate is used.
+
+The stream runs for a duration of 30 seconds.
+
 ## ownRecognizer
 This demo shows how you can write your own processor.
 
