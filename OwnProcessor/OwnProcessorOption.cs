@@ -2,7 +2,7 @@
 
 namespace CapCognitionNetLTS_Samples.OwnProcessor;
 
-public class OwnProcessorOption : RecognitionOption
+public class OwnProcessorOption : RecognitionOptions
 {
     public OwnOptionEnum OwnOption { get; set; }
 
@@ -15,4 +15,9 @@ public class OwnProcessorOption : RecognitionOption
         OwnOption1,
         OwnOption2
     }
+}
+
+public static class OwnRecognition
+{
+    public static RecognitionOptions Use => new OwnProcessorOption();
 }

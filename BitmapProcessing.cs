@@ -4,9 +4,7 @@ using CapCognition.Net.Core.Processing.Common;
 using CapCognition.Net.LicensePlateDetection.Common;
 using CapCognitionNetLTS_Samples.OwnProcessor;
 using SkiaSharp;
-using static CapCognition.Net.BarcodeScanning.Common.RecognitionProcessorBarcodeResult;
-using static CapCognition.Net.Core.Processing.Common.RecognitionProcessorResult;
-using static CapCognition.Net.LicensePlateDetection.Common.RecognitionProcessorLicensePlateDetectionResult;
+using System.Text;
 
 namespace CapCognitionNetLTS_Samples;
 
@@ -22,7 +20,7 @@ public class BitmapProcessing
     public static List<string> ProcessImageSequentially(Recognizer recognizer, SKBitmap bitmap, string resultPath)
     {
         var resultList = new List<string>();
-        var result = recognizer.ProcessImageAsync(bitmap, ResultDrawingOptions).GetAwaiter().GetResult();
+        var result = recognizer.ProcessImageAsync(bitmap, _resultDrawingOptions).GetAwaiter().GetResult();
         if (result == null)
         {
             Console.WriteLine("Failed to recognize image for {resultPath}");
@@ -69,7 +67,7 @@ public class BitmapProcessing
                 AddResultsToList(out resultList, result);
                 sem.Release();
             },
-            ResultDrawingOptions).GetAwaiter().GetResult();
+            _resultDrawingOptions).GetAwaiter().GetResult();
 
         sem.Wait();
         return resultList;
@@ -85,43 +83,210 @@ public class BitmapProcessing
     /// <returns></returns>
     public static bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection = true, bool useLicensePlateDetection = true, bool useOwnProcessor = false, bool downloadModelsFromInternet = true)
     {
+        if (_options != null)
+        {
+            _options.Dispose();
+            _options = null;
+        }
         recognizer = new Recognizer();
 
-        var lpModelFileName = "Models/" + LicensePlateDetectionConstants.LicensePlateModelFileName640N + ".ccml";
-        var textModelFileName = "Models/" + LicensePlateDetectionConstants.TextModelFileName640N + ".ccml";
-        var vehicleModelFileName = "Models/" + LicensePlateDetectionConstants.VehicleModelFileName640N + ".ccml";
-        using var lpFile = new FileStream(lpModelFileName, FileMode.Open);
-        using var textFile = new FileStream(textModelFileName, FileMode.Open);
-        using var vehicleFile = new FileStream(vehicleModelFileName, FileMode.Open);
+        var optionBuilder = new RecognitionOptionBuilder();
+        var resultDrawingOptionBuilder = new ResultDrawingOptionsBuilder();
 
-        var options = new List<RecognitionOption>();
         if (useBarcodeDetection)
         {
-            options.Add(BarcodeRecognitionOption);
+            optionBuilder.AddBarcodeRecognitionOption()
+                .EnableMultiCodeReader()
+                .UseFastRecognition(false)
+                .TryInverted()
+                .SetBinarizer(BarcodeRecognitionOptions.BinarizerType.HybridBinarizer)
+                .SetBarcodeFormats(new[] { BarcodeRecognitionOptions.BarcodeFormat.QRCode })
+                .SetEncoding(Encoding.UTF8)
+                .Done();
+
+            resultDrawingOptionBuilder.AddBarcodeDrawingOptions()
+                .DrawBoundingBox()
+                .BoundingBoxColor(SKColors.Blue)
+                .BoundingBoxStyle(SKPaintStyle.Stroke)
+                .BoundingBoxStrokeWidth(3f)
+                .Done();
         }
+
         if (useLicensePlateDetection)
         {
-            var lprOptions = LicensePlateDetectionRecognitionOption;
+            var lprOptionBuilder = optionBuilder.AddLicensePlateDetectionRecognitionOption()
+                .UseCudaProvider(false)
+                .UseCroppedImageForRecognition()
+                .DoAutomaticDetectionOptimization()
+                .SetRecognitionQuality(LicensePlateDetectionRecognitionOptionBuilder.RecognitionQuality.Medium)
+                .ConfigureOption(option =>
+                {
+                    //option.ClearModelCacheFolder();
+                    //option.ClearOldModelsFromCacheFolder();
+                });
+
+            resultDrawingOptionBuilder.AddLicensePlateDetectionDrawingOptions()
+                .DisplayVehicleSurroundingBox(true)
+                .VehicleSurroundingRectColor(new SKColor(0, 255, 0, 40))
+                .VehicleSurroundingRectStyle(SKPaintStyle.Fill)
+                .VehicleSurroundingRectStrokeWidth(1f)
+                .LicensePlateSurroundingRectColor(SKColors.Green)
+                .LicensePlateSurroundingRectStyle(SKPaintStyle.Stroke)
+                .LicensePlateSurroundingRectStrokeWidth(2f)
+                .LicensePlateNonValidatedSurroundingRectColor(SKColors.Red)
+                .Done();
+
             if (downloadModelsFromInternet)
             {
-                lprOptions.SetRecognitionQuality(LicensePlateDetectionRecognitionOption.RecognitionQuality.Medium);
+                //use one of the following recognition modes:
+
+                //lprOptionBuilder.UseRecognitionModeCountryLicencePlateThenVehicle();
+                //lprOptionBuilder.UseRecognitionModeNoCountryLicencePlateThenVehicle();
+
+                //lprOptionBuilder.UseRecognitionModeVehicleOnly();
+                //lprOptionBuilder.UseRecognitionModeVehicleThenCountryLicencePlate();
             }
             else
             {
-                var plateModelStream = new LicensePlateDetectionRecognitionOption.StreamInfo(lpFile, lpModelFileName);
-                var textModelStream = new LicensePlateDetectionRecognitionOption.StreamInfo(textFile, textModelFileName);
-                var vehicleModelStream = new LicensePlateDetectionRecognitionOption.StreamInfo(vehicleFile, vehicleModelFileName);
+                var licensePlateModelFileName = "Models/" + LicensePlateDetectionConstants.LicensePlateModelFileName640N + ".ccml";
+                var noCountryLicensePlateModelFileName = "Models/" + LicensePlateDetectionConstants.LicensePlateNoCountryModelFileName640N + ".ccml";
+                var textModelFileName = "Models/" + LicensePlateDetectionConstants.TextModelFileName640N + ".ccml";
+                var vehicleModelFileName = "Models/" + LicensePlateDetectionConstants.VehicleModelFileName640N + ".ccml";
 
-                lprOptions.SetModelStreams(plateModelStream, textModelStream, vehicleModelStream);
+
+                //please choose one of the following recognition modes for demonstration:
+
+                var demoRecognitionMode = LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateThenVehicle;
+                //var demoRecognitionMode = LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateOnly;
+                //var demoRecognitionMode = LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleOnly;
+                //var demoRecognitionMode = LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleThenCountryLicencePlate;
+                //var demoRecognitionMode = LicensePlateDetectionRecognitionOptions.RecognitionModeType.NoCountryLicencePlateThenVehicle;
+                //var demoRecognitionMode = LicensePlateDetectionRecognitionOptions.RecognitionModeType.NoCountryLicencePlateOnly;
+                //var demoRecognitionMode = LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleThenNoCountryLicencePlate;
+
+                //----------------- Country licence plate then vehicle ---------------------
+                if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateThenVehicle)
+                {
+                    var licensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(licensePlateModelFileName, FileMode.Open),
+                        licensePlateModelFileName,
+                        licensePlateModelFileName.EndsWith(".ccml"));
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(textModelFileName, FileMode.Open),
+                        textModelFileName,
+                        textModelFileName.EndsWith(".ccml"));
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(vehicleModelFileName, FileMode.Open),
+                        vehicleModelFileName,
+                        vehicleModelFileName.EndsWith(".ccml"));
+                    
+                    lprOptionBuilder.UseRecognitionModeCountryLicencePlateThenVehicle(licensePlateModelStream, textModelStream, vehicleModelStream);
+                }
+                //----------------- licence plate only ---------------------
+                else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateOnly)
+                {
+                    var licensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(licensePlateModelFileName, FileMode.Open),
+                        licensePlateModelFileName,
+                        licensePlateModelFileName.EndsWith(".ccml"));
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(textModelFileName, FileMode.Open),
+                        textModelFileName,
+                        textModelFileName.EndsWith(".ccml"));
+                    lprOptionBuilder.UseRecognitionModeCountryLicencePlateOnly(licensePlateModelStream, textModelStream);
+                }
+                //----------------- vehicle only---------------------
+                else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleOnly)
+                {
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(vehicleModelFileName, FileMode.Open),
+                        vehicleModelFileName,
+                        vehicleModelFileName.EndsWith(".ccml"));
+
+                    lprOptionBuilder.UseRecognitionModeVehicleOnly(vehicleModelStream);
+                }
+                //----------------- Vehicle then country licence plate ---------------------
+                else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleThenCountryLicencePlate)
+                {
+                    var licensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(licensePlateModelFileName, FileMode.Open),
+                        licensePlateModelFileName,
+                        licensePlateModelFileName.EndsWith(".ccml"));
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(textModelFileName, FileMode.Open),
+                        textModelFileName,
+                        textModelFileName.EndsWith(".ccml"));
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(vehicleModelFileName, FileMode.Open),
+                        vehicleModelFileName,
+                        vehicleModelFileName.EndsWith(".ccml"));
+
+                    lprOptionBuilder.UseRecognitionModeVehicleThenCountryLicencePlate(licensePlateModelStream, textModelStream, vehicleModelStream);
+                }
+                //----------------- licence plate then vehicle ---------------------
+                else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.NoCountryLicencePlateThenVehicle)
+                {
+                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(noCountryLicensePlateModelFileName, FileMode.Open),
+                        licensePlateModelFileName,
+                        licensePlateModelFileName.EndsWith(".ccml"));
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(textModelFileName, FileMode.Open),
+                        textModelFileName,
+                        textModelFileName.EndsWith(".ccml"));
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(vehicleModelFileName, FileMode.Open),
+                        vehicleModelFileName,
+                        vehicleModelFileName.EndsWith(".ccml"));
+
+                    lprOptionBuilder.UseRecognitionModeNoCountryLicencePlateThenVehicle(noCountryLicensePlateModelStream, textModelStream, vehicleModelStream);
+                }
+                //----------------- licence plate then vehicle ---------------------
+                else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.NoCountryLicencePlateOnly)
+                {
+                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(noCountryLicensePlateModelFileName, FileMode.Open),
+                        licensePlateModelFileName,
+                        licensePlateModelFileName.EndsWith(".ccml"));
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(textModelFileName, FileMode.Open),
+                        textModelFileName,
+                        textModelFileName.EndsWith(".ccml"));
+
+                    lprOptionBuilder.UseRecognitionModeNoCountryLicencePlateOnly(noCountryLicensePlateModelStream, textModelStream);
+                }
+                //----------------- Vehicle then licence plate ---------------------
+                else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleThenNoCountryLicencePlate)
+                {
+                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(noCountryLicensePlateModelFileName, FileMode.Open),
+                        licensePlateModelFileName,
+                        licensePlateModelFileName.EndsWith(".ccml"));
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(textModelFileName, FileMode.Open),
+                        textModelFileName,
+                        textModelFileName.EndsWith(".ccml"));
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
+                        new FileStream(vehicleModelFileName, FileMode.Open),
+                        vehicleModelFileName,
+                        vehicleModelFileName.EndsWith(".ccml"));
+
+                    lprOptionBuilder.UseRecognitionModeVehicleThenNoCountryLicencePlate(noCountryLicensePlateModelStream, textModelStream, vehicleModelStream);
+                }
             }
-            options.Add(lprOptions);
+
+            lprOptionBuilder.Done();
         }
+
+        _options = optionBuilder.Build();
         if (useOwnProcessor)
         {
-            options.Add(OwnProcessorOption);
+            _options.Add(OwnProcessorOption);
         }
 
-        var success = recognizer.PrepareProcessorsAsync(bitmap.Width, bitmap.Height, options).GetAwaiter().GetResult();
+        _resultDrawingOptions = resultDrawingOptionBuilder.Build();
+
+        var success = recognizer.PrepareProcessorsAsync(bitmap.Width, bitmap.Height, _options).GetAwaiter().GetResult();
         if (!success)
         {
             Console.WriteLine("Failed to prepare recognition processors");
@@ -150,45 +315,8 @@ public class BitmapProcessing
         }
     }
 
-    private static readonly BarcodeRecognitionOption BarcodeRecognitionOption = new()
-    {
-        EnableMultiCodeReader = true,
-        UseFastRecognition = false,
-        BinarizerToUse = BarcodeRecognitionOption.BinarizerType.HybridBinarizer,
-        BarcodeFormatsToRecognize =
-        [
-            BarcodeRecognitionOption.BarcodeFormat.QRCode
-        ]
-    };
-
-    private static readonly LicensePlateDetectionRecognitionOption LicensePlateDetectionRecognitionOption = new()
-    {
-        UseCroppedImageForRecognition = true,
-        DoAutomaticDetectionOptimization = true,
-        UseCudaProvider = false,
-    };
-
-    private static readonly ResultDrawingOptions[] ResultDrawingOptions =
-    [
-        new ResultDrawingOptionsBarcode()
-        {
-            DrawBoundingBox = true,
-            BoundingBoxColor = new SKColor(0, 0, 255),
-            BoundingBoxStyle = SKPaintStyle.Stroke,
-            BoundingBoxStrokeWidth = 3f,
-        },
-        new ResultDrawingOptionsLicensePlateDetection()
-        {
-            DisplayVehicleSurroundingBox = true,
-            VehicleSurroundingRectColor = new SKColor(0, 255, 0, 40),
-            VehicleSurroundingRectStyle = SKPaintStyle.Fill,
-            VehicleSurroundingRectStrokeWidth = 1,
-            LicensePlateSurroundingRectColor = SKColors.Green,
-            LicensePlateSurroundingRectStyle = SKPaintStyle.Stroke,
-            LicensePlateSurroundingRectStrokeWidth = 2,
-            LicensePlateNonValidatedSurroundingRectColor = SKColors.Red,
-        }
-    ];
+    private static RecognitionProcessorResult.ResultDrawingOptions[]? _resultDrawingOptions;
+    private static List<RecognitionOptions>? _options;
 
     private static readonly OwnProcessorOption OwnProcessorOption = new()
     {

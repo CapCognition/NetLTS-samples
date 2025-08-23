@@ -9,20 +9,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.0.2" />
-    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.0.3" />
-    <PackageReference Include="CapCognition.Net" Version="2.0.2" />
+    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.1.1" />
+    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.1.1" />
+    <PackageReference Include="CapCognition.Net" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Cors" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Models\LPR-NC_1.1_640_n.ccml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="public\HLSDisplay.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

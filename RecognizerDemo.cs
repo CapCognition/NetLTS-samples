@@ -3,9 +3,6 @@ using CapCognition.Net.BarcodeScanning.Common;
 using CapCognition.Net.Core.Processing.Common;
 using CapCognition.Net.LicensePlateDetection.Common;
 using SkiaSharp;
-using static CapCognition.Net.BarcodeScanning.Common.RecognitionProcessorBarcodeResult;
-using static CapCognition.Net.Core.Processing.Common.RecognitionProcessorResult;
-using static CapCognition.Net.LicensePlateDetection.Common.RecognitionProcessorLicensePlateDetectionResult;
 
 namespace CapCognitionNetLTS_Samples;
 
@@ -36,6 +33,64 @@ public class RecognizerDemo
             ProcessImageSequentially(recognizer, bitmap, recognizePath);
         }
     }
+
+    private bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection, bool useLicensePlateDetection)
+    {
+        recognizer = new Recognizer();
+
+        var optionBuilder = new RecognitionOptionBuilder();
+        var resultDrawingOptionBuilder = new ResultDrawingOptionsBuilder();
+        if (useBarcodeDetection)
+        {
+            optionBuilder.AddBarcodeRecognitionOption()
+                .EnableMultiCodeReader()
+                .UseFastRecognition(false)
+                .TryInverted()
+                .SetBinarizer(BarcodeRecognitionOptions.BinarizerType.HistogrammBinarizer)
+                .SetBarcodeFormats(new[] { BarcodeRecognitionOptions.BarcodeFormat.QRCode })
+                .Done();
+
+            resultDrawingOptionBuilder.AddBarcodeDrawingOptions()
+                .DrawBoundingBox()
+                .BoundingBoxColor(SKColors.Blue)
+                .BoundingBoxStyle(SKPaintStyle.Stroke)
+                .BoundingBoxStrokeWidth(3f)
+                .Done();
+        }
+
+        if (useLicensePlateDetection)
+        {
+            optionBuilder.AddLicensePlateDetectionRecognitionOption()
+                .UseCudaProvider(false)
+                .UseCroppedImageForRecognition()
+                .DoAutomaticDetectionOptimization()
+                .SetRecognitionQuality(LicensePlateDetectionRecognitionOptionBuilder.RecognitionQuality.Medium)
+                .UseRecognitionModeCountryLicencePlateOnly()
+                .Done();
+
+            resultDrawingOptionBuilder.AddLicensePlateDetectionDrawingOptions()
+                .DisplayVehicleSurroundingBox(true)
+                .VehicleSurroundingRectColor(new SKColor(0, 255, 0, 40))
+                .VehicleSurroundingRectStyle(SKPaintStyle.Fill)
+                .VehicleSurroundingRectStrokeWidth(1f)
+                .LicensePlateSurroundingRectColor(SKColors.Green)
+                .LicensePlateSurroundingRectStyle(SKPaintStyle.Stroke)
+                .LicensePlateSurroundingRectStrokeWidth(2f)
+                .LicensePlateNonValidatedSurroundingRectColor(SKColors.Red)
+                .Done();
+        }
+
+        var recognitionOptions = optionBuilder.Build();
+        _resultDrawingOptions = resultDrawingOptionBuilder.Build();
+
+        var success = recognizer.PrepareProcessorsAsync(bitmap.Width, bitmap.Height, recognitionOptions).GetAwaiter().GetResult();
+        if (!success)
+        {
+            Console.WriteLine("Failed to prepare recognition processors");
+        }
+        return success;
+    }
+
 
     private void ProcessImageSequentially(Recognizer recognizer, SKBitmap bitmap, string resultPath)
     {
@@ -81,64 +136,5 @@ public class RecognizerDemo
         sem.Wait();
     }
 
-    private bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection, bool useLicensePlateDetection)
-    {
-        recognizer = new Recognizer();
-
-        var options = new List<RecognitionOption>();
-        if (useBarcodeDetection)
-        {
-            options.Add(_barcodeRecognitionOption);
-        }
-        if (useLicensePlateDetection)
-        {
-            options.Add(_licensePlateDetectionRecognitionOption);
-        }
-        
-        var success = recognizer.PrepareProcessorsAsync(bitmap.Width, bitmap.Height, options).GetAwaiter().GetResult();
-        if (!success)
-        {
-            Console.WriteLine("Failed to prepare recognition processors");
-        }
-        return success;
-    }
-
-    private readonly BarcodeRecognitionOption _barcodeRecognitionOption = new()
-    {
-        EnableMultiCodeReader = true,
-        UseFastRecognition = false,
-        BinarizerToUse = BarcodeRecognitionOption.BinarizerType.HistogrammBinarizer,
-        BarcodeFormatsToRecognize =
-        [
-            BarcodeRecognitionOption.BarcodeFormat.QRCode
-        ]
-    };
-
-    private readonly LicensePlateDetectionRecognitionOption _licensePlateDetectionRecognitionOption = new()
-    {
-        UseCroppedImageForRecognition = false,
-        UseCudaProvider = false,
-    };
-
-    private readonly ResultDrawingOptions[] _resultDrawingOptions =
-    [
-        new ResultDrawingOptionsBarcode()
-        {
-            DrawBoundingBox = true,
-            BoundingBoxColor = new SKColor(0, 0, 255),
-            BoundingBoxStyle = SKPaintStyle.Stroke,
-            BoundingBoxStrokeWidth = 3f,
-        },
-        new ResultDrawingOptionsLicensePlateDetection()
-        {
-            DisplayVehicleSurroundingBox = true,
-            VehicleSurroundingRectColor = new SKColor(0, 255, 0, 40),
-            VehicleSurroundingRectStyle = SKPaintStyle.Fill,
-            VehicleSurroundingRectStrokeWidth = 1,
-            LicensePlateSurroundingRectColor = SKColors.Green,
-            LicensePlateSurroundingRectStyle = SKPaintStyle.Stroke,
-            LicensePlateSurroundingRectStrokeWidth = 2,
-            LicensePlateNonValidatedSurroundingRectColor = SKColors.Red,
-        }
-    ];
+    private RecognitionProcessorResult.ResultDrawingOptions[]? _resultDrawingOptions;
 }

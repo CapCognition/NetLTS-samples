@@ -29,10 +29,10 @@ public class Program
             },
             //Need to be added so that the dynamically linked assemblies can be found by CapCognition: will hopefully be fixed in the future
             [
-                new BarcodeRecognitionOption(),
-                new LicensePlateDetectionRecognitionOption(),
-                new OwnProcessorOption(),
-                new VideoStreamCaptureSourceOptions()
+                BarcodeRecognition.Use,
+                LicensePlateDetection.Use,
+                VideoStreamCapturing.Use,
+                OwnRecognition.Use,
             ]);
 
         //Enable/Disable logs

@@ -13,7 +13,7 @@ public class OwnProcessor : ImageProcessor
         //Here you can implement your own logic when the processor is stopped
     }
 
-    public override async Task<bool> StartProcessingAsync(RecognitionOption option, int captureResolutionWidth, int captureResolutionHeight)
+    public override async Task<bool> StartProcessingAsync(RecognitionOptions option, int captureResolutionWidth, int captureResolutionHeight)
     {
         await base.StartProcessingAsync(option, captureResolutionWidth, captureResolutionHeight);
 
