@@ -69,7 +69,7 @@ public class HttpStreamingHostDemo
         if (File.Exists(CertPath))
         {
             Console.WriteLine("Loading existing certificate...");
-            return new X509Certificate2(CertPath, CertPassword, X509KeyStorageFlags.Exportable);
+            return X509Certificate2.CreateFromEncryptedPemFile(CertPath, CertPassword);
         }
 
         Console.WriteLine("Generating and saving new certificate...");
@@ -86,7 +86,7 @@ public class HttpStreamingHostDemo
         var pfxBytes = cert.Export(X509ContentType.Pfx, CertPassword);
         File.WriteAllBytes(CertPath, pfxBytes);
 
-        return new X509Certificate2(pfxBytes, CertPassword, X509KeyStorageFlags.Exportable);
+        return X509Certificate2.CreateFromEncryptedPemFile(CertPath, CertPassword);
     }
 
     const string CertPath = "localhost-dev-cert.pfx";

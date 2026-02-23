@@ -168,17 +168,9 @@ public class BitmapProcessing
                 if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateThenVehicle)
                 {
                     var licensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(licensePlateModelFileName, FileMode.Open),
-                        licensePlateModelFileName,
-                        licensePlateModelFileName.EndsWith(".ccml"));
-                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(textModelFileName, FileMode.Open),
-                        textModelFileName,
-                        textModelFileName.EndsWith(".ccml"));
-                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(vehicleModelFileName, FileMode.Open),
-                        vehicleModelFileName,
-                        vehicleModelFileName.EndsWith(".ccml"));
+                        new FileStream(licensePlateModelFileName, FileMode.Open), licensePlateModelFileName);
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(textModelFileName, FileMode.Open), textModelFileName);
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(vehicleModelFileName, FileMode.Open), vehicleModelFileName);
                     
                     lprOptionBuilder.UseRecognitionModeCountryLicencePlateThenVehicle(licensePlateModelStream, textModelStream, vehicleModelStream);
                 }
@@ -186,94 +178,58 @@ public class BitmapProcessing
                 else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateOnly)
                 {
                     var licensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(licensePlateModelFileName, FileMode.Open),
-                        licensePlateModelFileName,
-                        licensePlateModelFileName.EndsWith(".ccml"));
-                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(textModelFileName, FileMode.Open),
-                        textModelFileName,
-                        textModelFileName.EndsWith(".ccml"));
+                        new FileStream(licensePlateModelFileName, FileMode.Open),licensePlateModelFileName);
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(textModelFileName, FileMode.Open), textModelFileName);
                     lprOptionBuilder.UseRecognitionModeCountryLicencePlateOnly(licensePlateModelStream, textModelStream);
                 }
                 //----------------- vehicle only---------------------
                 else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleOnly)
                 {
-                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(vehicleModelFileName, FileMode.Open),
-                        vehicleModelFileName,
-                        vehicleModelFileName.EndsWith(".ccml"));
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(vehicleModelFileName, FileMode.Open), vehicleModelFileName);
 
                     lprOptionBuilder.UseRecognitionModeVehicleOnly(vehicleModelStream);
                 }
                 //----------------- Vehicle then country licence plate ---------------------
                 else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleThenCountryLicencePlate)
                 {
-                    var licensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(licensePlateModelFileName, FileMode.Open),
-                        licensePlateModelFileName,
-                        licensePlateModelFileName.EndsWith(".ccml"));
-                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(textModelFileName, FileMode.Open),
-                        textModelFileName,
-                        textModelFileName.EndsWith(".ccml"));
-                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(vehicleModelFileName, FileMode.Open),
-                        vehicleModelFileName,
-                        vehicleModelFileName.EndsWith(".ccml"));
+                    var licensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(licensePlateModelFileName, FileMode.Open), licensePlateModelFileName);
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(textModelFileName, FileMode.Open), textModelFileName);
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(vehicleModelFileName, FileMode.Open), vehicleModelFileName);
 
                     lprOptionBuilder.UseRecognitionModeVehicleThenCountryLicencePlate(licensePlateModelStream, textModelStream, vehicleModelStream);
                 }
                 //----------------- licence plate then vehicle ---------------------
                 else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.NoCountryLicencePlateThenVehicle)
                 {
-                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(noCountryLicensePlateModelFileName, FileMode.Open),
-                        licensePlateModelFileName,
-                        licensePlateModelFileName.EndsWith(".ccml"));
-                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(textModelFileName, FileMode.Open),
-                        textModelFileName,
-                        textModelFileName.EndsWith(".ccml"));
-                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(vehicleModelFileName, FileMode.Open),
-                        vehicleModelFileName,
-                        vehicleModelFileName.EndsWith(".ccml"));
+                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(noCountryLicensePlateModelFileName, FileMode.Open), licensePlateModelFileName);
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(textModelFileName, FileMode.Open), textModelFileName);
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(vehicleModelFileName, FileMode.Open), vehicleModelFileName);
 
                     lprOptionBuilder.UseRecognitionModeNoCountryLicencePlateThenVehicle(noCountryLicensePlateModelStream, textModelStream, vehicleModelStream);
                 }
                 //----------------- licence plate then vehicle ---------------------
                 else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.NoCountryLicencePlateOnly)
                 {
-                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(noCountryLicensePlateModelFileName, FileMode.Open),
-                        licensePlateModelFileName,
-                        licensePlateModelFileName.EndsWith(".ccml"));
-                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(textModelFileName, FileMode.Open),
-                        textModelFileName,
-                        textModelFileName.EndsWith(".ccml"));
+                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(noCountryLicensePlateModelFileName, FileMode.Open), licensePlateModelFileName);
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(textModelFileName, FileMode.Open), textModelFileName);
 
                     lprOptionBuilder.UseRecognitionModeNoCountryLicencePlateOnly(noCountryLicensePlateModelStream, textModelStream);
                 }
                 //----------------- Vehicle then licence plate ---------------------
                 else if (demoRecognitionMode == LicensePlateDetectionRecognitionOptions.RecognitionModeType.VehicleThenNoCountryLicencePlate)
                 {
-                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(noCountryLicensePlateModelFileName, FileMode.Open),
-                        licensePlateModelFileName,
-                        licensePlateModelFileName.EndsWith(".ccml"));
-                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(textModelFileName, FileMode.Open),
-                        textModelFileName,
-                        textModelFileName.EndsWith(".ccml"));
-                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(
-                        new FileStream(vehicleModelFileName, FileMode.Open),
-                        vehicleModelFileName,
-                        vehicleModelFileName.EndsWith(".ccml"));
+                    var noCountryLicensePlateModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(noCountryLicensePlateModelFileName, FileMode.Open), licensePlateModelFileName);
+                    var textModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(textModelFileName, FileMode.Open), textModelFileName);
+                    var vehicleModelStream = new LicensePlateDetectionRecognitionOptions.StreamInfo(new FileStream(vehicleModelFileName, FileMode.Open), vehicleModelFileName);
 
                     lprOptionBuilder.UseRecognitionModeVehicleThenNoCountryLicencePlate(noCountryLicensePlateModelStream, textModelStream, vehicleModelStream);
                 }
             }
+
+            lprOptionBuilder.ConfigureOption(option =>
+            {
+                option.CreateAndPrepareModelsAsync().GetAwaiter().GetResult();
+            });
 
             lprOptionBuilder.Done();
         }

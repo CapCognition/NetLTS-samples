@@ -3,7 +3,6 @@ using CapCognition.Net.CaptureSources.VideoStream;
 using CapCognition.Net.Core.Capture;
 using CapCognition.Net.LicensePlateDetection.Common;
 using CapCognitionNetLTS_Samples.OwnProcessor;
-using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;

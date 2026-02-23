@@ -1,12 +1,12 @@
 ﻿using CapCognition.Net.Core;
 using CapCognition.Net.Core.Processing;
-using CapCognitionNetLTS_Samples.OwnProcessor;
+using CapCognition.Net.LicensePlateDetection.Processor;
 
 //Use the CapcognitionExtension attribute so the initializer can find the processor
-[assembly: CapcognitionExtension(typeof(OwnProcessorInitializer))]
+[assembly: CapcognitionExtension(typeof(CapcognitionLicensePlateDetection))]
 namespace CapCognitionNetLTS_Samples.OwnProcessor;
 
-public class OwnProcessorInitializer : IRecognitionProcessExtension
+public class OwnProcessorInitializer : CapCognition.Net.Core.Processing.IRecognitionProcessExtension
 {
     public void Initialize()
     {
