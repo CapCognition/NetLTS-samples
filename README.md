@@ -1,5 +1,15 @@
 # CapCognition .NET LTS Samples
 
+Oben im README würde ich zusätzlich diese Badges einfügen, direkt unter dem Titel:
+
+```md
+[![CapCognition.Net.Core](https://img.shields.io/nuget/v/CapCognition.Net.Core.svg?label=Core)](https://www.nuget.org/packages/CapCognition.Net.Core)
+[![CapCognition.Net](https://img.shields.io/nuget/v/CapCognition.Net.svg?label=Capture)](https://www.nuget.org/packages/CapCognition.Net)
+[![CapCognition.Net.BarcodeScanning](https://img.shields.io/nuget/v/CapCognition.Net.BarcodeScanning.svg?label=Barcode)](https://www.nuget.org/packages/CapCognition.Net.BarcodeScanning)
+[![CapCognition.Net.LicensePlateDetection](https://img.shields.io/nuget/v/CapCognition.Net.LicensePlateDetection.svg?label=LPR)](https://www.nuget.org/packages/CapCognition.Net.LicensePlateDetection)
+[![CapCognition.Net.YoloModelDetection](https://img.shields.io/nuget/v/CapCognition.Net.YoloModelDetection.svg?label=YOLO)](https://www.nuget.org/packages/CapCognition.Net.YoloModelDetection)
+```
+
 Practical .NET console samples for the CapCognition SDK.
 
 This repository demonstrates how to use CapCognition for real-time camera and image processing scenarios, including barcode recognition, QR code recognition, license plate recognition, RTSP stream processing, HLS browser streaming, YOLO model detection and custom image processors.
@@ -67,6 +77,43 @@ This repository is useful for developers who want to build:
 * Optional: YOLO model files for YOLO detection demos
 
 The project is designed as a developer sample and focuses on demonstrating the SDK capabilities. Some demo code is intentionally kept simple so the processing flow is easier to understand.
+
+## NuGet packages
+
+The samples in this repository use the CapCognition .NET LTS NuGet packages for camera capture, image processing, barcode recognition, QR code recognition, license plate recognition, YOLO model detection and licensing.
+
+| Package | Purpose |
+|---|---|
+| [CapCognition.Net.Core](https://www.nuget.org/packages/CapCognition.Net.Core) | Core SDK components, base classes and recognition pipeline infrastructure used by the CapCognition .NET libraries. |
+| [CapCognition.Net](https://www.nuget.org/packages/CapCognition.Net) | Camera capture, RTSP stream processing, H.264 decoding and output streaming support for .NET LTS applications. |
+| [CapCognition.Net.BarcodeScanning](https://www.nuget.org/packages/CapCognition.Net.BarcodeScanning) | Barcode and QR code recognition for 1D and 2D barcode formats. |
+| [CapCognition.Net.LicensePlateDetection](https://www.nuget.org/packages/CapCognition.Net.LicensePlateDetection) | License plate recognition, ANPR/ALPR workflows and optional vehicle type detection. |
+| [CapCognition.Net.YoloModelDetection](https://www.nuget.org/packages/CapCognition.Net.YoloModelDetection) | YOLO model detection integration for custom object recognition workflows. |
+| [CapCognition.Net.Licensing](https://www.nuget.org/packages/CapCognition.Net.Licensing) | Licensing infrastructure used by CapCognition packages. |
+
+## Install packages manually
+
+If you want to build your own project instead of using this sample repository, you can install the packages with the .NET CLI:
+
+```bash
+dotnet add package CapCognition.Net.Core
+dotnet add package CapCognition.Net
+dotnet add package CapCognition.Net.BarcodeScanning
+dotnet add package CapCognition.Net.LicensePlateDetection
+dotnet add package CapCognition.Net.YoloModelDetection
+dotnet add package CapCognition.Net.Licensing
+```
+Depending on your use case, you may not need all packages.
+
+For example:
+
+Scenario	Recommended packages
+Barcode and QR code recognition from images	CapCognition.Net.Core, CapCognition.Net.BarcodeScanning
+License plate recognition from images	CapCognition.Net.Core, CapCognition.Net.LicensePlateDetection
+RTSP camera stream processing	CapCognition.Net.Core, CapCognition.Net
+RTSP stream + barcode recognition	CapCognition.Net.Core, CapCognition.Net, CapCognition.Net.BarcodeScanning
+RTSP stream + license plate recognition	CapCognition.Net.Core, CapCognition.Net, CapCognition.Net.LicensePlateDetection
+YOLO object detection	CapCognition.Net.Core, CapCognition.Net.YoloModelDetection
 
 ## Getting started
 
@@ -217,6 +264,7 @@ This is especially important for:
 * Documentation: https://docu.capcognition.com
 * Pricing: https://capcognition.com/page/pricing
 * GitHub organization: https://github.com/CapCognition
+* NuGet packages: https://www.nuget.org/profiles/CapCognition
 
 ## Related CapCognition topics
 
