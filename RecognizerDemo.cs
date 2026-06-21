@@ -17,7 +17,7 @@ public class RecognizerDemo
 
         if (!success)
         {
-            Console.WriteLine("Failed to prepare recognition processor for {recognizePath}");
+            Console.WriteLine($"Failed to prepare recognition processor for {recognizePath}");
             return;
         }
         
@@ -69,7 +69,7 @@ public class RecognizerDemo
                 .Done();
 
             resultDrawingOptionBuilder.AddLicensePlateDetectionDrawingOptions()
-                .DisplayVehicleSurroundingBox(true)
+                .DisplayVehicleSurroundingBox()
                 .VehicleSurroundingRectColor(new SKColor(0, 255, 0, 40))
                 .VehicleSurroundingRectStyle(SKPaintStyle.Fill)
                 .VehicleSurroundingRectStrokeWidth(1f)
@@ -97,13 +97,13 @@ public class RecognizerDemo
         var result = recognizer.ProcessImageAsync(bitmap, _resultDrawingOptions).GetAwaiter().GetResult();
         if (result == null)
         {
-            Console.WriteLine("Failed to recognize image for {resultPath}");
+            Console.WriteLine($"Failed to recognize image for {resultPath}");
             return;
         }
 
         if (result.Results.Count == 0)
         {
-            Console.WriteLine("No elements could be recognized for {resultPath}");
+            Console.WriteLine($"No elements could be recognized for {resultPath}");
             return;
         }
 

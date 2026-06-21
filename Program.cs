@@ -1,8 +1,10 @@
-﻿using CapCognition.Net.BarcodeScanning.Common;
-using CapCognition.Net.CaptureSources.VideoStream;
+﻿using CapCognition.Net.BarcodeScanning.Processor;
+using CapCognition.Net.CaptureSources;
 using CapCognition.Net.Core.Capture;
-using CapCognition.Net.LicensePlateDetection.Common;
+using CapCognition.Net.LicensePlateDetection.Processor;
+using CapCognition.Net.YoloModelDetection.Processor;
 using CapCognitionNetLTS_Samples.OwnProcessor;
+using SkiaSharp;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -43,6 +45,10 @@ public class Program
                 RunOwnRecognizer(recognitionResultPath);
                 break;
 
+            case "yolomodel":
+                RunYoloModel(recognitionResultPath);
+                break;
+
             default:
                 PrintUsage();
                 break;
@@ -63,17 +69,12 @@ public class Program
     {
         CapCognition.Net.Core.CapCognition.Initialize(
             loggingFactory,
-            new[]
-            {
-                //Add your licenses here
-                "",
-            },
-            //Need to be added so that the dynamically linked assemblies can be found by CapCognition: will hopefully be fixed in the future
             [
-                BarcodeRecognition.Use,
-                LicensePlateDetection.Use,
-                VideoStreamCapturing.Use,
-                OwnRecognition.Use,
+                VideoStreamCapturing.Use(/* Here comes your license */),
+                BarcodeRecognition.Use(/* Here comes your license */),
+                LicensePlateDetection.Use(/* Here comes your license */),
+                YoloModelDetection.Use(/* Here comes your license */),
+                YourOwnRecognizer.Use(/* Here comes your license */),
             ]);
 
         CapCognition.Net.Core.CapCognition.EnableImageProcessingLogs = true;
@@ -168,6 +169,30 @@ public class Program
                 continue;
             }
             new OwnProcessorDemo().Recognize(file);
+        }
+    }
+
+    private static void RunYoloModel(string recognitionResultPath)
+    {
+        foreach (var file in Directory.GetFiles(recognitionResultPath))
+        {
+            if (file.Contains("_result.png"))
+            {
+                continue;
+            }
+
+            var bitmap = SKBitmap.Decode(file);
+
+            var demo = new YoloModelDemo();
+            //prepare processor with the image, so that the model is loaded before processing the next images
+            //because the images can have different sizes, the processor needs to be prepared with an image before recognition, so that the model is loaded and ready for the next images.
+            //If the images have the same size, the processor can be prepared with the first image and then all images can be processed without preparing the processor again.
+            demo.PrepareProcessor(bitmap);
+            demo.Recognize(recognitionResultPath, Path.GetFileNameWithoutExtension(file), bitmap);
+
+            //disposing demo, so models are unloaded and resources are freed
+            demo.Dispose();
+            bitmap.Dispose();
         }
     }
 

@@ -9,17 +9,27 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.1.5" />
-    <PackageReference Include="CapCognition.Net.Core" Version="2.1.4" />
-    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.1.6" />
-    <PackageReference Include="CapCognition.Net" Version="2.1.4" />
+    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.2.0" />
+    <PackageReference Include="CapCognition.Net.Core" Version="2.2.0" />
+    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.2.0" />
+    <PackageReference Include="CapCognition.Net" Version="2.2.0" />
+    <PackageReference Include="CapCognition.Net.YoloModelDetection" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Models\fruits-yolo-model.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Models\LPR-NC_1.1_640_n.ccml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Models\Text_1.1_640n.ccml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="public\HLSDisplay.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\apple.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Data Matrix.jpg">
@@ -50,9 +60,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\QR Code.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Models\Text_1.0_640_n.ccml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Models\Vehicle_1.0_640_n.ccml">
