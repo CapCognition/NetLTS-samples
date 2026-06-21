@@ -1,38 +1,239 @@
-# NetLTS-samples
-This command line program for .NET 8 shows the different capabilities of the CapCognition libraries.
-Start the program with different parameters to see the capabilities.
+# CapCognition .NET LTS Samples
 
-## recognize
-All images under “Resources” are processed by the various decoders (barcode and license plate). The graphical results are also saved as images in the same resource directory.
+Practical .NET console samples for the CapCognition SDK.
 
-## stream {URL}
-An RTSP stream from the specified URL is started.
+This repository demonstrates how to use CapCognition for real-time camera and image processing scenarios, including barcode recognition, QR code recognition, license plate recognition, RTSP stream processing, HLS browser streaming, YOLO model detection and custom image processors.
 
-The url has the format *“rtsp://{username}:{password}@{FQDN or IP address}:{port}”*.
+CapCognition is a cross-platform .NET framework for computer vision and object recognition applications. It can be used to build recognition systems for Windows, Linux and Raspberry Pi environments.
 
-The stream runs for 10 seconds. An image is captured and recognized every second. The results are saved as images in the “Resources” subdirectory.
+## What you can learn from this repository
 
-For simplicity and structural reasons, the demo code is not written in a very optimized and interlocked form. For an optimized product, some parts can be extremely optimized. 
+This sample project shows how to:
 
-An example:
+* Recognize barcodes and QR codes from image files
+* Detect and read license plates from images
+* Process RTSP camera streams
+* Capture frames from video streams and run recognition on them
+* Convert an RTSP stream into an HLS stream for browser playback
+* Integrate YOLO-based object detection models
+* Write and register your own custom CapCognition image processor
+* Build modular recognition pipelines with dependency injection
+* Use CapCognition SDK packages in a .NET LTS application
 
-In the StreamRecognitionDemo file, an image processor with the entire processor chain is newly created and initialized for each captured image before the image is passed for processing. This image processor only needs to be initialized once for a specific resolution and can then be reused for any further processing.
+## Included demos
 
-## streamHLS {URL}
-An RTSP stream is initiated from the specified URL and converted to an HLS stream.
+| Command           | Description                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `recognize`       | Processes all images in the `Resources` folder and runs barcode and license plate recognition. Result images are written back to the same folder. |
+| `stream {URL}`    | Opens an RTSP camera stream, captures frames and runs recognition on the stream.                                                                  |
+| `streamHLS {URL}` | Converts an RTSP stream into an HLS stream and serves it through a local browser-based demo page.                                                 |
+| `ownRecognizer`   | Demonstrates how to build and register a custom image processor.                                                                                  |
+| `yoloModel`       | Demonstrates YOLO model detection with the CapCognition YOLO integration.                                                                         |
 
-The URL should follow the format: *“rtsp://{username}:{password}@{FQDN or IP address}:{port}”*
+## Technologies used
 
-The resulting HLS stream is generated in the "public/stream" subdirectory of the project directory. It can be viewed directly in a browser or using the provided HTML file. Playback with VLC or other media players is also possible; however, VLC may block the stream due to security restrictions if a self-signed certificate is used.
+* .NET
+* C#
+* CapCognition.Net
+* CapCognition.Net.Core
+* CapCognition.Net.BarcodeScanning
+* CapCognition.Net.LicensePlateDetection
+* CapCognition.Net.YoloModelDetection
+* RTSP video streams
+* HLS browser streaming
+* YOLO object detection
+* SkiaSharp image processing
 
-The stream runs for a duration of 30 seconds.
+## Typical use cases
 
-## ownRecognizer
-This demo shows how you can write your own processor.
+This repository is useful for developers who want to build:
 
-Simply create your own processing options to configure your processor. Write your processor derived from ImageProcessor and your code will be automatically added to the processing chain when your options are added.
-The Initializer class with the attributed notation *[assembly: CapcognitionExtension(typeof(OwnProcessorInitializer))]* is used to activate and register your processor in the framework. The dependency injection pattern is used here to achieve the highest possible modularity and independence.
+* .NET barcode scanner applications
+* QR code recognition tools
+* License plate recognition systems
+* ANPR / ALPR applications
+* Parking access control systems
+* Raspberry Pi camera recognition systems
+* RTSP camera analysis pipelines
+* Real-time object recognition services
+* Custom computer vision processors in .NET
+* YOLO-based recognition workflows
 
-**Note**:
+## Requirements
 
-For reasons of abstraction and provisioning, you can place each of your processors in its own assembly or nuget. This plugin is then integrated into the processing chain at runtime.
+* .NET SDK
+* A CapCognition license or trial configuration
+* Optional: RTSP-capable IP camera for stream demos
+* Optional: YOLO model files for YOLO detection demos
+
+The project is designed as a developer sample and focuses on demonstrating the SDK capabilities. Some demo code is intentionally kept simple so the processing flow is easier to understand.
+
+## Getting started
+
+Clone the repository:
+
+```bash
+git clone https://github.com/CapCognition/NetLTS-samples.git
+cd NetLTS-samples
+```
+
+Restore dependencies:
+
+```bash
+dotnet restore
+```
+
+Build the project:
+
+```bash
+dotnet build
+```
+
+Run the file recognition demo:
+
+```bash
+dotnet run -- recognize
+```
+
+The `recognize` command processes the images in the `Resources` folder and writes graphical result images back into the same folder.
+
+## Running RTSP stream recognition
+
+Use the `stream` command with an RTSP URL:
+
+```bash
+dotnet run -- stream "rtsp://username:password@camera-host:554/stream"
+```
+
+The RTSP URL normally follows this structure:
+
+```text
+rtsp://{username}:{password}@{FQDN-or-IP-address}:{port}/{stream-path}
+```
+
+The sample captures images from the stream and runs recognition on the captured frames.
+
+## Running RTSP to HLS browser streaming
+
+Use the `streamHLS` command:
+
+```bash
+dotnet run -- streamHLS "rtsp://username:password@camera-host:554/stream"
+```
+
+The demo creates an HLS stream in the `public/stream` directory and starts a local web page for browser playback.
+
+By default, the browser demo is available at:
+
+```text
+http://localhost:5000/HLSDisplay.html
+```
+
+This is useful if you want to test how a camera stream can be transformed into a browser-compatible playback format.
+
+## Running the custom processor demo
+
+Use:
+
+```bash
+dotnet run -- ownRecognizer
+```
+
+This demo shows how to create your own processor by deriving from the CapCognition image processing infrastructure.
+
+The custom processor is registered through an initializer and can then be added to the processing chain. This allows you to place processors in separate assemblies or NuGet packages and load them as modular extensions.
+
+## Running the YOLO model demo
+
+Use:
+
+```bash
+dotnet run -- yoloModel
+```
+
+This demo shows how to integrate YOLO-based model detection into a CapCognition recognition workflow.
+
+Use this as a starting point if you want to combine classical recognition tasks, such as barcode or license plate recognition, with custom object detection models.
+
+## Recognition pipeline
+
+CapCognition uses a modular recognition pipeline. A typical pipeline can include:
+
+1. A capture source, such as a file, camera or RTSP stream
+2. One or more image processors
+3. Barcode, QR code, license plate or YOLO recognition processors
+4. Optional custom processors
+5. Result handling, overlays and generated output images
+
+This makes it possible to combine multiple recognition technologies in one application.
+
+## License setup
+
+The sample contains placeholders for CapCognition license configuration.
+
+Look for code sections similar to:
+
+```csharp
+VideoStreamCapturing.Use(/* Here comes your license */);
+BarcodeRecognition.Use(/* Here comes your license */);
+LicensePlateDetection.Use(/* Here comes your license */);
+YoloModelDetection.Use(/* Here comes your license */);
+```
+
+Replace the placeholders with your own CapCognition license configuration.
+
+## Performance notes
+
+The demo code is written for clarity and learning purposes.
+
+For production systems, you should optimize parts of the processing flow. For example, an image processor chain should normally be initialized once for a specific resolution and then reused for subsequent frames instead of being recreated for every captured image.
+
+This is especially important for:
+
+* High frame rate RTSP streams
+* Multiple parallel camera streams
+* Raspberry Pi or embedded Linux deployments
+* Real-time parking access control systems
+* License plate recognition at barriers or gates
+
+## Repository structure
+
+| Path                       | Purpose                                         |
+| -------------------------- | ----------------------------------------------- |
+| `Program.cs`               | Command line entry point and demo selection     |
+| `FileRecognitionDemo.cs`   | Image file recognition demo                     |
+| `StreamRecognitionDemo.cs` | RTSP stream recognition demo                    |
+| `StreamHLSDemo.cs`         | RTSP to HLS streaming demo                      |
+| `HttpStreamingHostDemo.cs` | Local HTTP host for browser streaming           |
+| `YoloModelDemo.cs`         | YOLO model detection demo                       |
+| `OwnProcessor/`            | Custom processor example                        |
+| `Resources/`               | Sample images and generated recognition results |
+| `Models/`                  | Model-related files                             |
+| `public/`                  | Browser/HLS demo assets                         |
+
+## Useful links
+
+* Website: https://capcognition.com
+* Documentation: https://docu.capcognition.com
+* Pricing: https://capcognition.com/page/pricing
+* GitHub organization: https://github.com/CapCognition
+
+## Related CapCognition topics
+
+* .NET barcode recognition
+* .NET QR code recognition
+* .NET license plate recognition
+* ANPR / ALPR development
+* Computer vision in C#
+* RTSP stream processing in .NET
+* HLS streaming from IP cameras
+* YOLO object detection in .NET
+* Raspberry Pi image recognition
+* Custom image processors
+* Parking access control systems
+
+## License
+
+This sample repository is licensed under the MIT License.
+
+CapCognition SDK packages may require their own license depending on the package and usage scenario.
