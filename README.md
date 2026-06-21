@@ -1,14 +1,12 @@
 # CapCognition .NET LTS Samples
 
-Oben im README würde ich zusätzlich diese Badges einfügen, direkt unter dem Titel:
+[![Core](https://img.shields.io/nuget/v/CapCognition.Net.Core?label=Core)](https://www.nuget.org/packages/CapCognition.Net.Core)
+[![Capture](https://img.shields.io/nuget/v/CapCognition.Net?label=Capture)](https://www.nuget.org/packages/CapCognition.Net)
+[![Barcode](https://img.shields.io/nuget/v/CapCognition.Net.BarcodeScanning?label=Barcode)](https://www.nuget.org/packages/CapCognition.Net.BarcodeScanning)
+[![LPR](https://img.shields.io/nuget/v/CapCognition.Net.LicensePlateDetection?label=LPR)](https://www.nuget.org/packages/CapCognition.Net.LicensePlateDetection)
+[![YOLO](https://img.shields.io/nuget/v/CapCognition.Net.YoloModelDetection?label=YOLO)](https://www.nuget.org/packages/CapCognition.Net.YoloModelDetection)
 
-```md
-[![CapCognition.Net.Core](https://img.shields.io/nuget/v/CapCognition.Net.Core.svg?label=Core)](https://www.nuget.org/packages/CapCognition.Net.Core)
-[![CapCognition.Net](https://img.shields.io/nuget/v/CapCognition.Net.svg?label=Capture)](https://www.nuget.org/packages/CapCognition.Net)
-[![CapCognition.Net.BarcodeScanning](https://img.shields.io/nuget/v/CapCognition.Net.BarcodeScanning.svg?label=Barcode)](https://www.nuget.org/packages/CapCognition.Net.BarcodeScanning)
-[![CapCognition.Net.LicensePlateDetection](https://img.shields.io/nuget/v/CapCognition.Net.LicensePlateDetection.svg?label=LPR)](https://www.nuget.org/packages/CapCognition.Net.LicensePlateDetection)
-[![CapCognition.Net.YoloModelDetection](https://img.shields.io/nuget/v/CapCognition.Net.YoloModelDetection.svg?label=YOLO)](https://www.nuget.org/packages/CapCognition.Net.YoloModelDetection)
-```
+Practical .NET console samples for the CapCognition SDK.
 
 Practical .NET console samples for the CapCognition SDK.
 
