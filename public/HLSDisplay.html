@@ -23,24 +23,40 @@
 </head>
 <body>
 
-<video id="video" controls autoplay></video>
+<video id="video" controls autoplay muted playsinline></video>
 
-<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.18"></script>
 <script>
   const video = document.getElementById('video');
-  const hlsUrl = 'http://localhost:5000/stream/output.m3u8';
+  const hlsUrl = '/stream/output.m3u8';
 
   if (Hls.isSupported()) {
-    const hls = new Hls();
+    const hls = new Hls({
+      lowLatencyMode: true,
+      liveSyncDurationCount: 1,
+      liveMaxLatencyDurationCount: 3,
+      maxLiveSyncPlaybackRate: 1.5,
+      backBufferLength: 0
+    });
     hls.loadSource(hlsUrl);
     hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      video.play();
+    hls.on(Hls.Events.MANIFEST_PARSED, async function () {
+      try {
+        await video.play();
+      } catch (error) {
+        console.warn('Autoplay was blocked:', error);
+      }
     });
+    window.addEventListener('pagehide', () => hls.destroy(), { once: true });
   } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    // Native support (Safari)
     video.src = hlsUrl;
-    video.addEventListener('loadedmetadata', () => video.play());
+    video.addEventListener('loadedmetadata', async () => {
+      try {
+        await video.play();
+      } catch (error) {
+        console.warn('Autoplay was blocked:', error);
+      }
+    }, { once: true });
   } else {
     alert("Your browser does not support HLS playback.");
   }

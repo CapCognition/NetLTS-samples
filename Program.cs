@@ -1,19 +1,17 @@
-﻿using CapCognition.Net.BarcodeScanning.Processor;
+using CapCognition.Net.BarcodeScanning.Processor;
 using CapCognition.Net.CaptureSources;
 using CapCognition.Net.Core.Capture;
 using CapCognition.Net.LicensePlateDetection.Processor;
 using CapCognition.Net.YoloModelDetection.Processor;
 using CapCognitionNetLTS_Samples.OwnProcessor;
 using SkiaSharp;
-using System.Diagnostics;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace CapCognitionNetLTS_Samples;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         if (args.Length == 0)
         {
@@ -38,7 +36,7 @@ public class Program
                 break;
 
             case "streamhls":
-                RunStreamHls(args);
+                await RunStreamHls(args);
                 break;
 
             case "ownrecognizer":
@@ -117,47 +115,9 @@ public class Program
         new StreamRecognitionDemo().Stream(url);
     }
 
-    private static void RunStreamHls(string[] args)
+    private static Task RunStreamHls(string[] args)
     {
-        if (args.Length < 2)
-        {
-            Console.WriteLine("Please provide the rtsp url");
-            return;
-        }
-
-        var url = args[1];
-        var streamingDemo = new StreamHLSDemo();
-
-        //create http streaming host
-        var httpStreamingHost = new HttpStreamingHostDemo(streamingDemo.PublicRoutePath);
-        httpStreamingHost.Start(args);
-
-        //start streaming
-        streamingDemo.Stream(url);
-
-        //give stream time to start -> can be optimized with better java script while loading the playlist
-        Thread.Sleep(TimeSpan.FromSeconds(5));
-
-        //open demo web page in browser
-        var demoWebPage = "http://localhost:5000/HLSDisplay.html";
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            Process.Start(new ProcessStartInfo(demoWebPage) { UseShellExecute = true });
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            Process.Start("xdg-open", demoWebPage);
-        }
-        else
-        {
-            Console.WriteLine("Cannot determine OS to open browser.");
-        }
-
-        //run for 30 seconds
-        Thread.Sleep(TimeSpan.FromSeconds(30));
-
-        //stop streaming
-        streamingDemo.StopStream();
+        return new StreamHLSDemo().StreamAsync(args);
     }
 
     private static void RunOwnRecognizer(string recognitionResultPath)

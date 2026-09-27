@@ -1,77 +1,152 @@
-﻿using CapCognition.Net.CaptureSources.VideoStream;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using CapCognition.Net.CaptureSources.VideoStream;
 using CapCognition.Net.Core.Capture;
-using System.Reflection;
 
 namespace CapCognitionNetLTS_Samples;
 
-//streamHLS rtsp://username:password@ip:port/stream
+// streamHLS rtsp://username:password@ip:port/stream
 public class StreamHLSDemo
 {
-    public StreamHLSDemo()
+    public async Task StreamAsync(string[] args)
     {
-        Directory.CreateDirectory(StreamingRoutePath);
-    }
+        if (args.Length < 2)
+        {
+            Console.WriteLine("Not enough parameters given: streamHLS <URL>");
+            return;
+        }
 
-    public void Stream(string url)
-    {
-        var u = new Uri(url);
-        var captureSourceOptions = new VideoStreamCaptureSourceOptions(u, null, null);
+        if (!Uri.TryCreate(args[1], UriKind.Absolute, out var url))
+        {
+            Console.WriteLine("Invalid stream URL");
+            return;
+        }
+
+        Directory.CreateDirectory(StreamingRoutePath);
+        using var host = HttpStreamingHostDemo.CreateHttpHost(PublicRoutePath);
+        try
+        {
+            await host.StartAsync();
+        }
+        catch (Exception exception)
+        {
+            Console.Error.WriteLine($"Failed to start HTTP/HTTPS host: {exception.Message}");
+            return;
+        }
+
+        var captureSourceOptions = new VideoStreamCaptureSourceOptions(url, null, null);
 
         var captureSource = CaptureControl.Instance.CreateVideoCaptureSource(captureSourceOptions);
         if (captureSource == null)
         {
             Console.WriteLine("Failed to create video capture source");
+            await host.StopAsync();
             return;
         }
 
-        var outputOptions = new HLSVideoStreamOutputSinkOptions(StreamingRoutePath);
-        var hlsOutput = OutputControl.Instance.CreateVideoOutputSink(captureSource, outputOptions);
-        if (hlsOutput == null)
+        IVideoOutputSink? hlsOutput = null;
+        try
         {
-            CaptureControl.Instance.RemoveCaptureSource(captureSource);
-            Console.WriteLine("Failed to create HLS output");
-            return;
-        }
+            var outputOptions = new HLSVideoStreamOutputSinkOptions(StreamingRoutePath);
+            hlsOutput = OutputControl.Instance.CreateVideoOutputSink(captureSource, outputOptions);
+            if (hlsOutput == null)
+            {
+                Console.WriteLine("Failed to create HLS output");
+                return;
+            }
 
-        // the HLS output can be started before the capture source is started and is automatically synchronized to the capture source start and stop
-        var success = hlsOutput.StartOutput();
-        if (!success)
+            if (!await hlsOutput.StartOutputAsync())
+            {
+                Console.WriteLine("Failed to start HLS output");
+                return;
+            }
+
+            if (!await captureSource.StartCaptureAsync())
+            {
+                Console.WriteLine("Failed to start capture");
+                return;
+            }
+
+            Console.WriteLine("Streaming and HLS output started. Press 'q' or Ctrl+C to terminate.");
+            Console.WriteLine("HTTP:  http://localhost:5000/HLSDisplay.html");
+            Console.WriteLine("HTTPS: https://localhost:5001/HLSDisplay.html");
+            Console.WriteLine("IPv6:  http://[::1]:5000/ or https://[::1]:5001/");
+            try
+            {
+                const string demoWebPage = "http://localhost:5000/HLSDisplay.html";
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    Process.Start(new ProcessStartInfo(demoWebPage) { UseShellExecute = true });
+                }
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    Process.Start("xdg-open", demoWebPage);
+                }
+            }
+            catch (Exception exception)
+            {
+                Console.Error.WriteLine($"Could not open browser: {exception.Message}");
+            }
+
+            await WaitForTerminationAsync();
+        }
+        finally
         {
+            try
+            {
+                await captureSource.StopCaptureAsync();
+            }
+            catch (Exception exception)
+            {
+                Console.Error.WriteLine($"Failed to stop capture cleanly: {exception.Message}");
+            }
+
+            if (hlsOutput != null)
+            {
+                OutputControl.Instance.RemoveOutputSink(hlsOutput);
+            }
             CaptureControl.Instance.RemoveCaptureSource(captureSource);
-            OutputControl.Instance.RemoveOutputSink(hlsOutput);
-            Console.WriteLine("Failed to start HLS output");
-            return;
+
+            try
+            {
+                await host.StopAsync();
+            }
+            catch (Exception exception)
+            {
+                Console.Error.WriteLine($"Failed to stop HTTP/HTTPS host cleanly: {exception.Message}");
+            }
         }
-
-        // start the capture source, this will also start the HLS output if it is already started
-        success = captureSource.StartCapture();
-        if (!success)
-        {
-            CaptureControl.Instance.RemoveCaptureSource(captureSource);
-            OutputControl.Instance.RemoveOutputSink(hlsOutput);
-            Console.WriteLine("Failed to start capture");
-            return;
-        }
-
-        //optional: gain full access to the capture source and output sink
-        _videoCaptureSource = captureSource.ToVideoStreamCaptureSource();
-        _videoStreamOutputSink = hlsOutput.ToVideoStreamOutputSink();
-
-        Console.WriteLine("Streaming and HLS output started. Press 'q' to terminate");
     }
 
-    public void StopStream()
+    private static async Task WaitForTerminationAsync()
     {
-        Console.WriteLine("Stopping streaming and HLS output");
-        _videoCaptureSource?.StopCapture();
-        _videoStreamOutputSink?.StopOutput();
-        CaptureControl.Instance.RemoveCaptureSource(_videoCaptureSource);
-        OutputControl.Instance.RemoveOutputSink(_videoStreamOutputSink);
+        var termination = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ConsoleCancelEventHandler cancelHandler = (_, eventArgs) =>
+        {
+            eventArgs.Cancel = true;
+            termination.TrySetResult();
+        };
+        Console.CancelKeyPress += cancelHandler;
+        try
+        {
+            if (!Console.IsInputRedirected)
+            {
+                _ = Task.Run(() =>
+                {
+                    while (Console.ReadKey(intercept: true).KeyChar != 'q')
+                    {
+                    }
+                    termination.TrySetResult();
+                });
+            }
+            await termination.Task;
+        }
+        finally
+        {
+            Console.CancelKeyPress -= cancelHandler;
+        }
     }
 
-    public string PublicRoutePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "public") ;
-    public string StreamingRoutePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "public", "stream");
-
-    private IVideoStreamCaptureSource? _videoCaptureSource;
-    private IVideoStreamOutputSink? _videoStreamOutputSink;
+    public string PublicRoutePath { get; } = Path.Combine(AppContext.BaseDirectory, "public");
+    public string StreamingRoutePath { get; } = Path.Combine(AppContext.BaseDirectory, "public", "stream");
 }
