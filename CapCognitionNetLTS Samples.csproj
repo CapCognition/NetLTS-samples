@@ -9,11 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.2.0" />
-    <PackageReference Include="CapCognition.Net.Core" Version="2.2.0" />
-    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.2.0" />
-    <PackageReference Include="CapCognition.Net" Version="2.2.0" />
-    <PackageReference Include="CapCognition.Net.YoloModelDetection" Version="2.2.0" />
+    <PackageReference Include="CapCognition.Net.BarcodeScanning" Version="2.2.1" />
+    <PackageReference Include="CapCognition.Net.Core" Version="2.2.1" />
+    <PackageReference Include="CapCognition.Net.LicensePlateDetection" Version="2.2.1" />
+    <PackageReference Include="CapCognition.Net" Version="2.2.1" />
+    <PackageReference Include="CapCognition.Net.YoloModelDetection" Version="2.2.1" />
   </ItemGroup>
 
   <ItemGroup>
