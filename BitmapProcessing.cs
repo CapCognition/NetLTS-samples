@@ -99,7 +99,7 @@ public class BitmapProcessing : IDisposable
     /// <param name="useBarcodeDetection"></param>
     /// <param name="useLicensePlateDetection"></param>
     /// <returns></returns>
-    public bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection = true, bool useLicensePlateDetection = true, bool useOwnProcessor = false, bool downloadModelsFromInternet = true)
+    public bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection = true, bool useLicensePlateDetection = true, bool useOwnProcessor = false, bool downloadModelsFromInternet = true, bool deliverPlatePictureInResult = false)
     {
         Dispose();
         recognizer = _recognizer = new Recognizer();
@@ -135,6 +135,7 @@ public class BitmapProcessing : IDisposable
         {
             var lprOptionBuilder = optionBuilder.AddLicensePlateDetectionRecognitionOption()
                 .UseCudaProvider(false)
+                .DeliverPlatePictureInResult(deliverPlatePictureInResult)
                 .UseCroppedImageForRecognition()
                 .DoAutomaticDetectionOptimization()
                 .SetRecognitionQuality(LicensePlateDetectionRecognitionOptionBuilder.RecognitionQuality.Medium);

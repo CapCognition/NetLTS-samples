@@ -34,6 +34,7 @@ This sample project shows how to:
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `recognize`       | Processes all images in the `Resources` folder and runs barcode and license plate recognition. Result images are written back to the same folder. |
 | `stream {URL}`    | Opens an RTSP camera stream, captures frames and runs recognition on the stream.                                                                  |
+| `streamTrack {URL} [seconds]` | Stabilizes license plate detections across RTSP frames using `LicensePlateTemporalTracker`. Defaults to 60 seconds. |
 | `streamHLS {URL}` | Converts an RTSP stream into an HLS stream and serves it through a local browser-based demo page.                                                 |
 | `ownRecognizer`   | Demonstrates how to build and register a custom image processor.                                                                                  |
 | `yoloModel`       | Demonstrates YOLO model detection with the CapCognition YOLO integration.                                                                         |
@@ -158,6 +159,20 @@ rtsp://{username}:{password}@{FQDN-or-IP-address}:{port}/{stream-path}
 
 The sample captures images from the stream and runs recognition on the captured frames.
 
+## Running RTSP license plate tracking
+
+Use `streamTrack` with an RTSP URL and an optional duration in seconds (1..86400):
+
+```bash
+dotnet run -- streamTrack "rtsp://username:password@camera-host:554/stream" 60
+```
+
+The demo uses the local license plate, text and vehicle models from the output `Models` folder. It prepares the recognizer once per frame resolution and feeds every recognition result, including frames without detections, into `LicensePlateTemporalTracker`.
+
+The tracker runs in `ParkingOfficer` mode and keeps the confirmed plate until you press `n` to start tracking the next vehicle. Press `q` or Ctrl+C to stop earlier than the configured duration. With redirected input, the configured duration or Ctrl+C ends the demo.
+
+Stable plate results are printed to the console. Their best source and plate images are saved under `Resources/TrackingResults` beside the application. No tracker diagnostic callback or CSV logging is used.
+
 ## Running RTSP to HLS browser streaming
 
 Use the `streamHLS` command:
@@ -248,6 +263,7 @@ This is especially important for:
 | `Program.cs`               | Command line entry point and demo selection     |
 | `FileRecognitionDemo.cs`   | Image file recognition demo                     |
 | `StreamRecognitionDemo.cs` | RTSP stream recognition demo                    |
+| `StreamTrackingDemo.cs`    | RTSP license plate tracking and stable result images |
 | `StreamHLSDemo.cs`         | RTSP to HLS streaming demo                      |
 | `HttpStreamingHostDemo.cs` | Local HTTP host for browser streaming           |
 | `YoloModelDemo.cs`         | YOLO model detection demo                       |

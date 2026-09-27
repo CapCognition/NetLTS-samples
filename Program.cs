@@ -19,20 +19,50 @@ public class Program
         }
 
         var command = args[0].ToLowerInvariant();
-        if (command is not ("recognize" or "stream" or "streamhls" or "ownrecognizer" or "yolomodel"))
+        if (command is "help" or "--help" or "-h" or "/?")
         {
             PrintUsage();
             return;
         }
-        if ((command is "stream" or "streamhls")
+        if (command is not ("recognize" or "stream" or "streamhls" or "streamtrack" or "ownrecognizer" or "yolomodel"))
+        {
+            Console.WriteLine($"Unknown command: {args[0]}");
+            PrintUsage();
+            return;
+        }
+        if ((command is "stream" or "streamhls" or "streamtrack")
             && (args.Length < 2 || !Uri.TryCreate(args[1], UriKind.Absolute, out _)))
         {
             Console.WriteLine("Please provide a valid absolute stream URL");
+            PrintUsage();
             return;
         }
 
+        var trackingDuration = TimeSpan.FromSeconds(60);
+        if (command == "streamtrack")
+        {
+            if (args.Length > 3 || (args.Length == 3
+                && (!int.TryParse(args[2], out var seconds) || seconds is < 1 or > 86400)))
+            {
+                Console.WriteLine("streamTrack expects an RTSP URL and an optional duration from 1 to 86400 seconds.");
+                PrintUsage();
+                return;
+            }
+            if (!Uri.TryCreate(args[1], UriKind.Absolute, out var trackingUrl)
+                || trackingUrl.Scheme is not ("rtsp" or "rtsps") || string.IsNullOrEmpty(trackingUrl.Host))
+            {
+                Console.WriteLine("Please provide a valid RTSP URL");
+                PrintUsage();
+                return;
+            }
+            if (args.Length == 3)
+            {
+                trackingDuration = TimeSpan.FromSeconds(int.Parse(args[2]));
+            }
+        }
+
         using var loggingFactory = BuildLoggerFactory();
-        await InitializeCapCognitionAsync(loggingFactory, command is "stream" or "streamhls");
+        await InitializeCapCognitionAsync(loggingFactory, command is "stream" or "streamhls" or "streamtrack");
 
         var recognitionResultPath = GetRecognitionResultPath();
 
@@ -48,6 +78,10 @@ public class Program
 
             case "streamhls":
                 await RunStreamHls(args);
+                break;
+
+            case "streamtrack":
+                await new StreamTrackingDemo().StreamAndTrackAsync(new Uri(args[1]), trackingDuration);
                 break;
 
             case "ownrecognizer":
@@ -176,12 +210,51 @@ public class Program
 
     private static void PrintUsage()
     {
-        Console.WriteLine("Unknown or missing command");
-        Console.WriteLine("Usage:");
-        Console.WriteLine("  recognize              Process all images in the Resources folder");
-        Console.WriteLine("  stream <rtspUrl>       Process RTSP stream");
-        Console.WriteLine("  streamHLS <rtspUrl>    Process RTSP stream and expose as HLS");
-        Console.WriteLine("  ownRecognizer          Run OwnProcessor demo on the Resources folder");
-        Console.WriteLine("  yoloModel              Recognize fruits using the local YOLO model");
+        Console.WriteLine("""
+            CapCognition .NET Samples
+
+            Usage (from the sample project directory):
+              dotnet run -- <command> [parameters]
+
+            Commands:
+              recognize                              Recognize barcodes and license plates in Resources
+              stream <rtspUrl>                       Recognize RTSP frames for 10 seconds
+              streamHLS <rtspUrl>                    Stream RTSP to the HLS browser player
+              streamTrack <rtspUrl> [durationSeconds] Track license plates in ParkingOfficer mode
+              ownRecognizer                          Process Resources with the custom processor
+              yoloModel                              Recognize fruits using the local YOLO model
+              help, --help, -h, /?                   Show this help
+
+            Parameter legend:
+              <parameter>       Required; replace the placeholder without angle brackets.
+              [parameter]       Optional; omit it to use the default value.
+              rtspUrl           Camera URL: rtsp://[username:password@]host:port/stream
+                                Quote the complete URL. Credentials depend on the camera.
+                                streamTrack accepts rtsp:// and rtsps:// URLs.
+              durationSeconds   Integer from 1 to 86400; only for streamTrack. Default: 60.
+              Commands are case-insensitive.
+
+            Keyboard controls:
+              streamTrack       n = next vehicle; q or Ctrl+C = stop
+                                A confirmed plate remains locked until n is pressed.
+              streamHLS         q or Ctrl+C = stop
+              With redirected input, use Ctrl+C or the streamTrack duration to stop.
+
+            Files and browser:
+              Resources and Models are located beside the application binaries.
+              Tracking result images: Resources/TrackingResults
+              HLS player: http://localhost:5000/HLSDisplay.html
+                          https://localhost:5001/HLSDisplay.html
+
+            Examples:
+              dotnet run -- recognize
+              dotnet run -- stream "rtsp://user:password@192.168.1.100:554/stream"
+              dotnet run -- streamHLS "rtsp://user:password@192.168.1.100:554/stream"
+              dotnet run -- streamTrack "rtsp://user:password@192.168.1.100:554/stream" 120
+              dotnet run -- streamTrack "rtsp://192.168.1.100:554/stream"
+              dotnet run -- ownRecognizer
+              dotnet run -- yoloModel
+              dotnet run -- --help
+            """);
     }
 }
