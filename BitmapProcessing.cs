@@ -6,10 +6,11 @@ using CapCognition.Net.LicensePlateDetection.Common.Extensions;
 using CapCognitionNetLTS_Samples.OwnProcessor;
 using SkiaSharp;
 using System.Text;
+using System.Collections.Concurrent;
 
 namespace CapCognitionNetLTS_Samples;
 
-public class BitmapProcessing
+public class BitmapProcessing : IDisposable
 {
     /// <summary>
     /// Processes the image sequentially
@@ -18,29 +19,29 @@ public class BitmapProcessing
     /// <param name="bitmap"></param>
     /// <param name="resultPath"></param>
     /// <returns>A list of results</returns>
-    public static List<string> ProcessImageSequentially(Recognizer recognizer, SKBitmap bitmap, string resultPath)
+    public List<string> ProcessImageSequentially(Recognizer recognizer, SKBitmap bitmap, string resultPath)
     {
         var resultList = new List<string>();
         var result = recognizer.ProcessImageAsync(bitmap, _resultDrawingOptions, disableBitmapDisposal: true).GetAwaiter().GetResult();
         if (result == null)
         {
-            Console.WriteLine("Failed to recognize image for {resultPath}");
+            Console.WriteLine($"Failed to recognize image for {resultPath}");
             return resultList;
         }
 
         if (result.Results.Count == 0)
         {
-            Console.WriteLine("No elements could be recognized for {resultPath}");
+            Console.WriteLine($"No elements could be recognized for {resultPath}");
             return resultList;
         }
 
         Console.WriteLine($"Successfully recognized {result.Results.Count} elements for {resultPath}, Detections: {string.Join(", ", result.Results.Select(r => r.GetType().Name))}");
 
-        var data = bitmap.Encode(SKEncodedImageFormat.Png, 90);
+        using var data = bitmap.Encode(SKEncodedImageFormat.Png, 90);
         var outputImg = Path.Combine(Path.GetDirectoryName(resultPath)!, $"{Path.GetFileName(resultPath)}_sequential_result.png");
         File.WriteAllBytes(outputImg, data.ToArray());
 
-        AddResultsToList(out resultList, result);
+        AddResultsToList(resultList, result);
         return resultList;
     }
 
@@ -51,26 +52,42 @@ public class BitmapProcessing
     /// <param name="bitmap"></param>
     /// <param name="resultPath"></param>
     /// <returns>A list of results</returns>
-    public static List<string> ProcessImageParallel(Recognizer recognizer, SKBitmap bitmap, string resultPath)
+    public List<string> ProcessImageParallel(Recognizer recognizer, SKBitmap bitmap, string resultPath)
     {
-        //parallel processing
-        var sem = new SemaphoreSlim(0, 1);
         var resultList = new List<string>();
-        recognizer.ProcessImageParallelAsync(bitmap,
-            (resultBmp, result) =>
+        var deliveries = new ConcurrentQueue<(SKBitmap Bitmap, RecognitionResult Result)>();
+        // The library owns the input in parallel mode. Keep the caller's bitmap alive.
+        using var input = bitmap.Copy();
+        try
+        {
+            recognizer.ProcessImageParallelAsync(input,
+                (resultBmp, result) =>
+                {
+                    // Callbacks share the input bitmap. Copy it before the library disposes it,
+                    // and draw/save afterwards so processors never read a bitmap being drawn on.
+                    deliveries.Enqueue((resultBmp.Copy(), result));
+                },
+                resultDrawingOptions: null).GetAwaiter().GetResult();
+
+            foreach (var (resultBmp, result) in deliveries)
             {
                 Console.WriteLine($"Successfully recognized {result.Results.Count} elements for {resultPath}, Detections: {string.Join(", ", result.Results.Select(r => r.GetType().Name))}");
-                var data = resultBmp.Encode(SKEncodedImageFormat.Png, 90);
+                recognizer.DrawResults(result, resultBmp, _resultDrawingOptions);
+                using var data = resultBmp.Encode(SKEncodedImageFormat.Png, 90);
                 var resultType = result.Results.FirstOrDefault()?.GetType().Name;
                 var outputImg = Path.Combine(Path.GetDirectoryName(resultPath)!, $"{Path.GetFileName(resultPath)}_parallel_{resultType}_result.png");
                 File.WriteAllBytes(outputImg, data.ToArray());
 
-                AddResultsToList(out resultList, result);
-                sem.Release();
-            },
-            _resultDrawingOptions).GetAwaiter().GetResult();
-
-        sem.Wait();
+                AddResultsToList(resultList, result);
+            }
+        }
+        finally
+        {
+            foreach (var delivery in deliveries)
+            {
+                delivery.Bitmap.Dispose();
+            }
+        }
         return resultList;
     }
 
@@ -82,16 +99,14 @@ public class BitmapProcessing
     /// <param name="useBarcodeDetection"></param>
     /// <param name="useLicensePlateDetection"></param>
     /// <returns></returns>
-    public static bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection = true, bool useLicensePlateDetection = true, bool useOwnProcessor = false, bool downloadModelsFromInternet = true)
+    public bool PrepareProcessor(out Recognizer recognizer, SKBitmap bitmap, bool useBarcodeDetection = true, bool useLicensePlateDetection = true, bool useOwnProcessor = false, bool downloadModelsFromInternet = true)
     {
-        if (_options != null)
-        {
-            _options.Dispose();
-            _options = null;
-        }
-        recognizer = new Recognizer();
+        Dispose();
+        recognizer = _recognizer = new Recognizer();
 
         var optionBuilder = new RecognitionOptionBuilder();
+        // Build returns the builder's list; owning it now also covers setup failures.
+        _options = optionBuilder.Build();
         var resultDrawingOptionBuilder = new ResultDrawingOptionsBuilder();
 
         if (useBarcodeDetection)
@@ -101,7 +116,10 @@ public class BitmapProcessing
                 .UseFastRecognition(false)
                 .TryInverted()
                 .SetBinarizer(BarcodeRecognitionOptions.BinarizerType.HybridBinarizer)
-                .SetBarcodeFormats(new[] { BarcodeRecognitionOptions.BarcodeFormat.QRCode })
+                .SetBarcodeFormats(new[]
+                {
+                    BarcodeRecognitionOptions.BarcodeFormat.QRCode,
+                })
                 .SetEncoding(Encoding.UTF8)
                 .Done();
 
@@ -144,28 +162,39 @@ public class BitmapProcessing
             }
             else
             {
-                lprOptionBuilder.UseLocalModelsForRecognitionMode(LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateThenVehicle)
-                    .SetLocalModelBasePath("Models")
-                    .UseLocalLicensePlateModelFromType(LPModelType.LPModelType640n)
-                    .UseLocalLicensePlateTextModelFromType(LPTextModelType.LPTextModelType640n)
-                    .UseLocalVehicleModelFromType(VehicleModelType.VehicleModelType640n)
-                    .Done();
+                var streams = lprOptionBuilder
+                    .UseLocalModelsForRecognitionMode(LicensePlateDetectionRecognitionOptions.RecognitionModeType.CountryLicencePlateThenVehicle)
+                    .SetLocalModelBasePath(Path.Combine(AppContext.BaseDirectory, "Models"));
+                try
+                {
+                    streams.UseLocalLicensePlateModelFromType(LPModelType.LPModelType640n)
+                        .UseLocalLicensePlateTextModelFromType(LPTextModelType.LPTextModelType640n)
+                        .UseLocalVehicleModelFromType(VehicleModelType.VehicleModelType640n)
+                        .Done();
+                }
+                catch
+                {
+                    // The builder transfers stream ownership to the options only at Done().
+                    streams.LpModelStream?.Dispose();
+                    streams.LpTextModelStream?.Dispose();
+                    streams.LpWideTextModelStream?.Dispose();
+                    streams.VehicleModelStream?.Dispose();
+                    throw;
+                }
             }
 
-            lprOptionBuilder.ConfigureOption(option =>
-            {
-                //only clear old models from cache to free up storage space
-                option.ClearOldModelsFromCacheFolder();
-                option.CreateAndPrepareModelsAsync().GetAwaiter().GetResult();
-            });
-
+            // PrepareProcessorsAsync loads models and reports preparation failures.
             lprOptionBuilder.Done();
         }
 
         _options = optionBuilder.Build();
         if (useOwnProcessor)
         {
-            _options.Add(OwnProcessorOption);
+            _options.Add(new OwnProcessorOption
+            {
+                EnableOwnOption = true,
+                OwnOption = OwnProcessorOption.OwnOptionEnum.OwnOption1
+            });
         }
 
         _resultDrawingOptions = resultDrawingOptionBuilder.Build();
@@ -178,9 +207,8 @@ public class BitmapProcessing
         return success;
     }
 
-    private static void AddResultsToList(out List<string> resultList, RecognitionResult result)
+    private static void AddResultsToList(List<string> resultList, RecognitionResult result)
     {
-        resultList = new List<string>();
         foreach (var res in result.Results)
         {
             if (res is RecognitionProcessorBarcodeResult barcodeResult)
@@ -199,12 +227,22 @@ public class BitmapProcessing
         }
     }
 
-    private static RecognitionProcessorResult.ResultDrawingOptions[]? _resultDrawingOptions;
-    private static List<RecognitionOptions>? _options;
+    private RecognitionProcessorResult.ResultDrawingOptions[]? _resultDrawingOptions;
+    private List<RecognitionOptions>? _options;
+    private Recognizer? _recognizer;
 
-    private static readonly OwnProcessorOption OwnProcessorOption = new()
+    public void Dispose()
     {
-        EnableOwnOption = true,
-        OwnOption = OwnProcessorOption.OwnOptionEnum.OwnOption1
-    };
+        try
+        {
+            _recognizer?.Dispose();
+        }
+        finally
+        {
+            _recognizer = null;
+            _options?.Dispose();
+            _options = null;
+            _resultDrawingOptions = null;
+        }
+    }
 }

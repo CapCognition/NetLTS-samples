@@ -15,10 +15,13 @@ public class OwnProcessor : ImageProcessor
 
     public override async Task<bool> StartProcessingAsync(RecognitionOptions option, int captureResolutionWidth, int captureResolutionHeight)
     {
-        await base.StartProcessingAsync(option, captureResolutionWidth, captureResolutionHeight);
+        if (option is not OwnProcessorOption yourOptions
+            || !await base.StartProcessingAsync(option, captureResolutionWidth, captureResolutionHeight))
+        {
+            return false;
+        }
 
         //Here you can implement your own logic when the processor is started
-        var yourOptions = (OwnProcessorOption)option;
 
         if (yourOptions.EnableOwnOption)
         {

@@ -9,21 +9,19 @@ public class YoloModelDemo : IDisposable
 {
     public bool PrepareProcessor(SKBitmap bitmap)
     {
-        var recognizer = new Recognizer();
+        Dispose();
+        var recognizer = _recognizer = new Recognizer();
 
         var fruitsModelStream = new YoloModelDetectionRecognitionOptions.ModelStreamInfo(
-            new FileStream("Models/fruits-yolo-model.onnx", FileMode.Open),
+            File.OpenRead(Path.Combine(AppContext.BaseDirectory, "Models", "fruits-yolo-model.onnx")),
             "fruits-yolo-model");
+
+        _modelStream = fruitsModelStream;
 
         _options = new RecognitionOptionBuilder()
             .AddYoloModelDetectionRecognitionOption()
             .UseFittedImageForRecognition()
             .UseModel(fruitsModelStream)
-            .ConfigureOption(options =>
-            {
-                //options.ClearModelCacheFolder();
-                options.CreateAndLoadModel();
-            })
             .Done()
             .Build();
 
@@ -39,13 +37,13 @@ public class YoloModelDemo : IDisposable
             Console.WriteLine("Failed to prepare recognition processors");
         }
 
-        _recognizer = recognizer;
+        _prepared = success;
         return success;
     }
 
     public void Recognize(string recognizePath, string filenameWithoutExt, SKBitmap bitmap)
     {
-        if (_recognizer == null)
+        if (_recognizer == null || !_prepared)
         {
             Console.WriteLine($"Recognizer is not initialized for {recognizePath}");
             return;
@@ -77,19 +75,37 @@ public class YoloModelDemo : IDisposable
             Console.WriteLine($"Recognized fruit: {fruitResult.ObjectId} '{fruitResult.ObjectIdentifier}' with confidence: {fruitResult.Confidence}");
         }
 
-        var data = bitmap.Encode(SKEncodedImageFormat.Png, 90);
+        using var data = bitmap.Encode(SKEncodedImageFormat.Png, 90);
         var outputImg = Path.Combine(recognizePath, $"{filenameWithoutExt}_result.png");
         File.WriteAllBytes(outputImg, data.ToArray());
     }
 
     private Recognizer? _recognizer;
+    private bool _prepared;
+    private YoloModelDetectionRecognitionOptions.ModelStreamInfo? _modelStream;
     private List<RecognitionOptions>? _options;
     private RecognitionProcessorResult.ResultDrawingOptions[]? _resultDrawingOptions;
     public void Dispose()
     {
-        _recognizer?.Dispose();
-        _recognizer = null;
-        _options?.Dispose();
-        _options = null;
+        try
+        {
+            _recognizer?.Dispose();
+        }
+        finally
+        {
+            _recognizer = null;
+            _prepared = false;
+            if (_options != null)
+            {
+                _options.Dispose();
+            }
+            else
+            {
+                _modelStream?.Dispose();
+            }
+            _options = null;
+            _modelStream = null;
+            _resultDrawingOptions = null;
+        }
     }
 }

@@ -2,7 +2,7 @@
   "profiles": {
     "CCNetLTS Samples": {
       "commandName": "Project",
-      "commandLineArgs": "yolomodel"
+      "commandLineArgs": "streamHLS rtsp://nobody:123456@192.168.217.86:554/stream1"
     }
   }
 }

@@ -2,7 +2,6 @@
 using CapCognition.Licensing.Validation;
 using CapCognition.Net.Core.Processing;
 using CapCognition.Net.Core.Utils;
-using System.Reflection;
 
 namespace CapCognitionNetLTS_Samples.OwnProcessor;
 
@@ -39,7 +38,7 @@ internal class YourLicenseValidator
                 return;
             }
 
-            var version = Assembly.GetCallingAssembly().GetName().Version;
+            var version = typeof(YourOwnRecognizer).Assembly.GetName().Version;
 
             var licenseParts = license.Version.Split('.');
             var mjv = licenseParts.Length >= 1 ? licenseParts[0] : null;

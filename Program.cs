@@ -5,7 +5,6 @@ using CapCognition.Net.LicensePlateDetection.Processor;
 using CapCognition.Net.YoloModelDetection.Processor;
 using CapCognitionNetLTS_Samples.OwnProcessor;
 using SkiaSharp;
-using System.Reflection;
 
 namespace CapCognitionNetLTS_Samples;
 
@@ -19,11 +18,23 @@ public class Program
             return;
         }
 
-        var loggingFactory = BuildLoggerFactory();
-        InitializeCapCognition(loggingFactory);
+        var command = args[0].ToLowerInvariant();
+        if (command is not ("recognize" or "stream" or "streamhls" or "ownrecognizer" or "yolomodel"))
+        {
+            PrintUsage();
+            return;
+        }
+        if ((command is "stream" or "streamhls")
+            && (args.Length < 2 || !Uri.TryCreate(args[1], UriKind.Absolute, out _)))
+        {
+            Console.WriteLine("Please provide a valid absolute stream URL");
+            return;
+        }
+
+        using var loggingFactory = BuildLoggerFactory();
+        await InitializeCapCognitionAsync(loggingFactory, command is "stream" or "streamhls");
 
         var recognitionResultPath = GetRecognitionResultPath();
-        var command = args[0].ToLowerInvariant();
 
         switch (command)
         {
@@ -32,7 +43,7 @@ public class Program
                 break;
 
             case "stream":
-                RunRtspStream(args);
+                await RunRtspStream(args);
                 break;
 
             case "streamhls":
@@ -63,7 +74,7 @@ public class Program
         });
     }
 
-    private static void InitializeCapCognition(ILoggerFactory loggingFactory)
+    private static async Task InitializeCapCognitionAsync(ILoggerFactory loggingFactory, bool initializeCapture)
     {
         CapCognition.Net.Core.CapCognition.Initialize(
             loggingFactory,
@@ -76,24 +87,25 @@ public class Program
             ]);
 
         CapCognition.Net.Core.CapCognition.EnableImageProcessingLogs = true;
-        CaptureControl.Instance.InitializeAsync().GetAwaiter().GetResult();
+        if (!CapCognition.Net.Core.CapCognition.Initialized)
+        {
+            throw new InvalidOperationException("Failed to initialize CapCognition");
+        }
+        if (initializeCapture)
+        {
+            await CaptureControl.Instance.InitializeAsync();
+        }
     }
 
     private static string GetRecognitionResultPath()
     {
-        var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
-        return Path.Combine(assemblyDirectory, "Resources");
+        return Path.Combine(AppContext.BaseDirectory, "Resources");
     }
 
     private static void RunFileRecognition(string recognitionResultPath)
     {
-        foreach (var file in Directory.GetFiles(recognitionResultPath))
+        foreach (var file in GetInputImages(recognitionResultPath))
         {
-            if (file.Contains("_result.png"))
-            {
-                continue;
-            }
-
             new FileRecognitionDemo().Recognize(
                 recognizePath: file,
                 useBarcodeDetection: true,
@@ -103,7 +115,7 @@ public class Program
         }
     }
 
-    private static void RunRtspStream(string[] args)
+    private static async Task RunRtspStream(string[] args)
     {
         if (args.Length < 2)
         {
@@ -112,7 +124,7 @@ public class Program
         }
 
         var url = args[1];
-        new StreamRecognitionDemo().Stream(url);
+        await new StreamRecognitionDemo().StreamAsync(url);
     }
 
     private static Task RunStreamHls(string[] args)
@@ -122,38 +134,44 @@ public class Program
 
     private static void RunOwnRecognizer(string recognitionResultPath)
     {
-        foreach (var file in Directory.GetFiles(recognitionResultPath))
+        foreach (var file in GetInputImages(recognitionResultPath))
         {
-            if (file.Contains("_result.png"))
-            {
-                continue;
-            }
             new OwnProcessorDemo().Recognize(file);
         }
     }
 
     private static void RunYoloModel(string recognitionResultPath)
     {
-        foreach (var file in Directory.GetFiles(recognitionResultPath))
+        foreach (var file in GetInputImages(recognitionResultPath))
         {
-            if (file.Contains("_result.png"))
+            using var bitmap = SKBitmap.Decode(file);
+            if (bitmap == null)
             {
+                Console.WriteLine($"Cannot decode image: {file}");
                 continue;
             }
-
-            var bitmap = SKBitmap.Decode(file);
-
-            var demo = new YoloModelDemo();
+            using var demo = new YoloModelDemo();
             //prepare processor with the image, so that the model is loaded before processing the next images
             //because the images can have different sizes, the processor needs to be prepared with an image before recognition, so that the model is loaded and ready for the next images.
             //If the images have the same size, the processor can be prepared with the first image and then all images can be processed without preparing the processor again.
-            demo.PrepareProcessor(bitmap);
+            if (!demo.PrepareProcessor(bitmap))
+            {
+                continue;
+            }
             demo.Recognize(recognitionResultPath, Path.GetFileNameWithoutExtension(file), bitmap);
-
-            //disposing demo, so models are unloaded and resources are freed
-            demo.Dispose();
-            bitmap.Dispose();
         }
+    }
+
+    private static IEnumerable<string> GetInputImages(string directory)
+    {
+        if (!Directory.Exists(directory))
+        {
+            Console.WriteLine($"Image directory does not exist: {directory}");
+            return Array.Empty<string>();
+        }
+        return Directory.GetFiles(directory).Where(file =>
+            !Path.GetFileName(file).EndsWith("_result.png", StringComparison.OrdinalIgnoreCase)
+            && Path.GetExtension(file).ToLowerInvariant() is ".jpg" or ".jpeg" or ".png" or ".bmp" or ".webp");
     }
 
     private static void PrintUsage()
@@ -164,5 +182,6 @@ public class Program
         Console.WriteLine("  stream <rtspUrl>       Process RTSP stream");
         Console.WriteLine("  streamHLS <rtspUrl>    Process RTSP stream and expose as HLS");
         Console.WriteLine("  ownRecognizer          Run OwnProcessor demo on the Resources folder");
+        Console.WriteLine("  yoloModel              Recognize fruits using the local YOLO model");
     }
 }
